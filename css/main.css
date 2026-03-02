@@ -1,0 +1,464 @@
+:root{
+  --padL: max(16px, env(safe-area-inset-left));
+  --padR: max(16px, env(safe-area-inset-right));
+  --padT: max(16px, env(safe-area-inset-top));
+  --padB: max(16px, env(safe-area-inset-bottom));
+
+  /* Ajuste ces deux valeurs si tu veux reculer un peu plus le panneau des bords */
+  --menuOffsetX: 32px;
+  --menuOffsetY: 32px;
+}
+
+html, body { height: 100%; margin: 0; background:#000; color:#eee; }
+
+body{
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+/* Layers */
+.bg{
+  position: fixed; inset: 0;
+  background: #000;
+  background-size: cover;
+  background-position: center;
+  filter: brightness(1.10) contrast(1.05);
+  transform: scale(1.02);
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.bg.on{ opacity: 1; }
+
+.vignette{
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at center, rgba(0,0,0,0.2), rgba(0,0,0,0.92));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 800ms ease;
+}
+.vignette.on{ opacity: 1; }
+
+.screen{
+  position: fixed; inset: 0;
+  display: none;
+  padding: var(--padT) var(--padR) var(--padB) var(--padL);
+}
+.screen.active{ display: grid; }
+
+/* Gate (black) */
+.gate{
+  place-items: center;
+  background: #000;
+}
+.gateBox{
+  width: min(720px, 92vw);
+  padding: 22px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.title{
+  margin: 0;
+  font-size: clamp(42px, 7vw, 76px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadeUp 1200ms ease forwards;
+}
+.disclaimer{
+  margin: 14px 0 0;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.82);
+  opacity: 0;
+  transform: translateY(6px);
+  animation: fadeUp 1200ms ease forwards;
+  animation-delay: 180ms;
+  font-size: 16px;
+}
+@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+.btnRow{
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+button{
+  min-height: 48px;
+  width: 100%;
+  text-align: left;
+  background: rgba(255,255,255,0.08);
+  color: #f2f2f2;
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 12px 14px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+  font-size: 16px;
+  touch-action: manipulation;
+}
+button:hover{ background: rgba(255,255,255,0.12); transform: translateY(-1px); }
+button:disabled{ opacity: 0.5; cursor: not-allowed; transform:none; }
+
+.metaLine{
+  margin-top: 10px;
+  opacity: 0.75;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* Login screen */
+.login{
+  place-items: center;
+  background: rgba(0,0,0,0.65);
+}
+.loginBox{
+  width: min(720px, 92vw);
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.60);
+  backdrop-filter: blur(7px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.55);
+}
+.loginBox h2{ margin: 0 0 10px; font-size: 18px; opacity: 0.95; }
+.field{ display: grid; gap: 6px; margin: 10px 0; }
+label{ font-size: 13px; opacity: 0.8; }
+input{
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #f2f2f2;
+  outline: none;
+  font-size: 16px;
+}
+input:focus{ border-color: rgba(255,255,255,0.28); }
+.inlineRow{ display:flex; gap:10px; flex-wrap: wrap; margin-top: 12px; }
+.inlineRow button{ width: auto; text-align: center; }
+
+/* Menu screen (BOTTOM RIGHT) */
+.menu{
+  grid-template-rows: 1fr auto;
+  align-items: end;
+}
+
+/* IMPORTANT: .screen.active met display:grid sur l'écran.
+   Donc on aligne les items (dont .menuPanel) à droite + bas ici. */
+.screen.menu.active{
+  justify-items: end;
+  align-items: end;
+  padding:
+    var(--padT)
+    calc(var(--padR) + var(--menuOffsetX))
+    calc(var(--padB) + var(--menuOffsetY))
+    var(--padL);
+}
+
+.menuPanel{
+  width: min(600px, 90vw);
+  background: linear-gradient(
+  to bottom,
+  rgba(15,15,15,0.55),
+  rgba(0,0,0,0.65)
+    );
+   backdrop-filter: blur(12px);
+   border: 1px solid rgba(255,255,255,0.06);
+
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 18px;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+  margin: 0; /* pas de centrage auto */
+}
+
+.menuSub{
+  margin: 0; /* si tu as retiré le titre, le sous-titre peut démarrer direct */
+  color: rgba(255,255,255,0.80);
+  line-height: 1.45;
+}
+.menuBtns{ display:grid; gap: 10px; margin-top: 14px; }
+
+.tiny{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.tinyBtn{
+  min-height:auto;
+  padding:6px 10px;
+  width:auto;
+  text-align:center;
+  font-size:12px;
+}
+
+/* Sur petit écran, on réduit un peu les offsets pour ne pas étouffer l'UI */
+@media (max-width: 720px){
+  :root{
+    --menuOffsetX: 16px;
+    --menuOffsetY: 16px;
+  }
+  .menuPanel{
+    width: min(640px, 92vw);
+  }
+}
+/* =========================
+   MENU – VERSION CINÉMA
+   ========================= */
+
+/* L'écran menu reste en grid, on pousse le panneau en bas à droite */
+.screen.menu.active{
+  justify-items: end;
+  align-items: end;
+  padding:
+    var(--padT)
+    calc(var(--padR) + 32px)
+    calc(var(--padB) + 32px)
+    var(--padL);
+}
+
+/* Panneau principal */
+.menuPanel{
+  width: min(600px, 90vw);
+
+  /* Effet verre sombre premium */
+  background: linear-gradient(
+    to bottom,
+    rgba(20,20,20,0.55),
+    rgba(0,0,0,0.70)
+  );
+
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 18px;
+  padding: 22px;
+
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 25px 70px rgba(0,0,0,0.75),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+
+  margin: 0;
+}
+
+/* Sous-texte */
+.menuSub{
+  margin: 0 0 12px 0;
+  color: rgba(255,255,255,0.75);
+  line-height: 1.45;
+}
+
+/* Boutons */
+.menuBtns{
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+/* Bouton principal (Lancer) */
+.menuBtns button:first-child{
+  background: linear-gradient(
+    to right,
+    rgba(255,140,0,0.18),
+    rgba(255,80,0,0.28)
+  );
+
+  border: 1px solid rgba(255,140,0,0.45);
+
+  box-shadow:
+    0 0 25px rgba(255,120,0,0.18),
+    inset 0 0 10px rgba(255,140,0,0.15);
+}
+
+/* Hover bouton principal */
+.menuBtns button:first-child:hover{
+  background: linear-gradient(
+    to right,
+    rgba(255,160,40,0.35),
+    rgba(255,100,0,0.45)
+  );
+}
+
+/* Boutons secondaires plus discrets */
+.menuBtns button:not(:first-child){
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* Ligne du bas */
+.tiny{
+  margin-top: 14px;
+  opacity: 0.65;
+}
+
+/* Responsive mobile */
+@media (max-width: 720px){
+  .menuPanel{
+    width: min(640px, 92vw);
+  }
+}
+/* Fade noir plein écran */
+.fade{
+  position: fixed;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 900ms ease;
+  z-index: 9999; /* au-dessus de tout */
+}
+.fade.on{
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* --- Scene 1 --- */
+.scene1{
+  place-items: center;
+  background: #000;
+}
+
+/* Carton Chapitre */
+.chapterCard{
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: clamp(22px, 4vw, 44px);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.92);
+  opacity: 0;
+  transition: opacity 1s ease;
+  z-index: 5;
+  background: rgba(0,0,0,0.0); /* pas de voile par défaut */
+}
+
+/* Image de scène (plein écran) */
+.sceneImage{
+  position: fixed;
+  inset: 0;
+  background: #000;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1s ease;
+  z-index: 1;
+}
+
+.is-visible{ opacity: 1; }
+
+/* --- Choices UI --- */
+.choicePanel{
+  position: absolute;
+  left: var(--padL);
+  right: var(--padR);
+  bottom: calc(var(--padB) + 24px);
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.60);
+
+  opacity: 0;
+  transform: translateY(10px);
+  pointer-events: none;
+  transition: opacity 350ms ease, transform 350ms ease;
+  z-index: 6; /* au-dessus de l'image */
+}
+
+.choicePanel.on{
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.choiceTitle{
+  font-size: 13px;
+  opacity: 0.75;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.choiceList{
+  display: grid;
+  gap: 10px;
+}
+
+.choiceBtn{
+  min-height: 52px;
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.06);
+  color: #f2f2f2;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease;
+  font-size: 16px;
+}
+
+.choiceBtn:hover{
+  background: rgba(255,255,255,0.10);
+  transform: translateY(-1px);
+}
+
+#text-container {
+  font-size: 1.4rem;
+  line-height: 1.6;
+  color: white;
+  max-width: 800px;
+  margin: 100px auto 40px auto;
+  text-align: left;
+  padding: 0 20px;
+}
+
+.hidden {
+  display: none;
+}
+
+#choices {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.choice-btn {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  margin: 12px 0;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: white;
+  font-size: 1.1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.choice-btn:hover {
+  background: rgba(255,255,255,0.12);
+}
+#text-container{
+  white-space: pre-line; /* \n -> retours à la ligne */
+  margin: 0 0 14px 0;   /* au lieu du gros margin 100px auto... */
+  padding: 0;
+  opacity: 0.95;
+}
+

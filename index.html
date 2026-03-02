@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>612104</title>
+  <link rel="stylesheet" href="./css/main.css">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+</head>
+
+<body>
+  <!-- Background (for menu), hidden on gate -->
+  <div class="bg" id="bg"></div>
+  <div class="vignette" id="vignette"></div>
+
+  <!-- Music (menu) -->
+  <audio id="music" loop preload="auto">
+    <source src="./assets/audio/againstthetide.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Fade overlay -->
+  <div id="fade" class="fade"></div>
+
+  <!-- SCREEN 1: Gate -->
+  <section class="screen gate active" id="screen-gate">
+    <div class="gateBox">
+      <h1 class="title">612104</h1>
+
+      <p class="disclaimer">
+        Avertissement : cette œuvre contient des thèmes pouvant heurter des personnes sensibles
+        (enfermement, détresse, catastrophes, charge émotionnelle).
+        Si tu ne te sens pas prêt·e, reviens plus tard.
+      </p>
+
+      <div class="btnRow">
+        <button id="btnGuest">▶ Jouer en tant qu’invité</button>
+        <button id="btnLogin">🔒 Se connecter</button>
+      </div>
+
+      <div class="metaLine" id="audioHint">
+        Le son démarrera après ton premier clic.
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: Login -->
+  <section class="screen login" id="screen-login">
+    <div class="loginBox">
+      <h2>Connexion</h2>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" placeholder="ex: nico@exemple.fr" />
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+
+      <div class="inlineRow">
+        <button id="btnSubmitLogin">Se connecter</button>
+        <button id="btnBackToGate">Retour</button>
+      </div>
+
+      <div class="metaLine" id="loginMsg"></div>
+    </div>
+  </section>
+
+  <!-- SCREEN 3: Menu -->
+  <section class="screen menu" id="screen-menu">
+    <div class="menuPanel">
+      <p class="menuSub">
+        Une expérience narrative interactive. Fais des choix. Porte-en le poids.
+      </p>
+
+      <div class="menuBtns">
+        <button id="btnStart">▶ Lancer</button>
+        <button id="btnOptions">⚙ Options</button>
+        <button id="btnFullscreen">⛶ Plein écran</button>
+        <button id="btnQuit">⏻ Quitter</button>
+      </div>
+
+      <div class="tiny">
+        <button id="btnSound" class="tinyBtn">Son : …</button>
+        <span>v0.1</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: Scene 1 -->
+  <section class="screen scene1" id="screen-scene1">
+    <div class="chapterCard" id="chapterCard">Chapitre 1 - L'origine</div>
+    <div class="sceneImage" id="scene1Image"></div>
+  <div class="choicePanel" id="choicePanel">
+  <div id="text-container"></div>
+  <div class="choiceTitle" id="choiceTitle">Que fais-tu ?</div>
+  <div class="choiceList" id="choiceList"></div>
+</div>
+</div>
+
+    </div>
+  </section>
+
+  <!-- Scene 1 ambience (no fade, explosion must be full) -->
+  <audio id="scene1Ambience" preload="auto">
+    <source src="./assets/audio/scene1/ambience_v1.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Main script -->
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
