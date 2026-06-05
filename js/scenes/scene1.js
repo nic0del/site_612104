@@ -1,603 +1,1922 @@
 import { showScreen } from "../router.js";
+import { playerState, savePlayerState } from "../state.js";
+import { createSceneEngine } from "./engine.js";
+
+const PLAYER_STATE_NUMERIC_KEYS = [
+  "selfControl",
+  "familyAnchor",
+  "dutyAnchor",
+  "politicalLucidity",
+  "tendernessToAngela",
+  "traumaLoad",
+  "stress"
+];
+
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function ensurePlayerStateShape() {
+  if (typeof playerState.proudReason === "undefined") {
+    playerState.proudReason = null;
+  }
+
+  if (typeof playerState.beliefHelped === "undefined") {
+    playerState.beliefHelped = null;
+  }
+
+  for (const key of PLAYER_STATE_NUMERIC_KEYS) {
+    if (typeof playerState[key] !== "number") {
+      playerState[key] = 0;
+    }
+  }
+}
+
+function ensureSceneState(state) {
+  if (!state.scene1) {
+    state.scene1 = {
+      currentNodeId: null,
+      visitedNodes: [],
+      visitedSet: {},
+      flags: {},
+      ended: false
+    };
+  }
+
+  const scene = state.scene1;
+  scene.visitedNodes ||= [];
+  scene.visitedSet ||= {};
+  scene.flags ||= {};
+  scene.ended ||= false;
+
+  ensurePlayerStateShape();
+
+  return scene;
+}
+
+function visitNode(scene, nodeId) {
+  if (!scene.visitedSet[nodeId]) {
+    scene.visitedSet[nodeId] = true;
+    scene.visitedNodes.push(nodeId);
+  }
+}
+
+function setFlag(scene, key, value = true) {
+  scene.flags[key] = value;
+}
+
+function getFlag(scene, key) {
+  return scene.flags[key];
+}
+
+function applyPlayerStatePatch(patch = {}) {
+  for (const [key, delta] of Object.entries(patch)) {
+    if (!PLAYER_STATE_NUMERIC_KEYS.includes(key)) continue;
+    playerState[key] = clamp((playerState[key] || 0) + delta, -5, 5);
+  }
+}
+
+function applyPlayerStateSet(setters = {}) {
+  for (const [key, value] of Object.entries(setters)) {
+    playerState[key] = value;
+  }
+}
+
+function getScene1MikaStateText() {
+  let controlText = "Je tiens encore debout mentalement, mais de justesse.";
+  if (playerState.selfControl >= 2) {
+    controlText = "Je garde encore assez de contrôle pour penser clairement.";
+  } else if (playerState.selfControl <= -2) {
+    controlText = "Je sens que quelque chose cède en moi à chaque instant.";
+  }
+
+  let familyText = "Je pourrais encore faire semblant de croire que tout cela ne concerne que moi.";
+  if (playerState.familyAnchor >= 2 || playerState.tendernessToAngela >= 2) {
+    familyText = "Plus je pense à eux, moins j’ai le droit de lâcher.";
+  }
+
+  let politicsText = "Le monde pourrait encore n’être qu’un décor effondré autour de moi.";
+  if (playerState.politicalLucidity >= 2) {
+    politicsText = "Je vois déjà que ce qui m’arrive ne vient pas de nulle part.";
+  } else if (playerState.stress >= 2) {
+    politicsText = "Le réel se brouille par moments, mais je sens qu’il s’est passé quelque chose de plus vaste.";
+  }
+
+  return `${controlText} ${familyText} ${politicsText}`;
+}
 
 const chapterCard = document.getElementById("chapterCard");
 const scene1Image = document.getElementById("scene1Image");
-const ambience = document.getElementById("scene1Ambience");
 const choicePanel = document.getElementById("choicePanel");
 const choiceTitle = document.getElementById("choiceTitle");
 const choiceList = document.getElementById("choiceList");
 const textContainer = document.getElementById("text-container");
 const fade = document.getElementById("fade");
 
-// Option: image provisoire
-const TEMP_SCENE_IMAGE = "./assets/image_fond/scene1_gravats.png";
+let currentGoToNode = null;
+let currentScene = null;
+let currentChapterEndHandler = null;
 
-// Stocke les timeouts pour éviter doublons si on relance
-let timers = [];
-function clearTimers() {
-  for (const t of timers) clearTimeout(t);
-  timers = [];
-}
+function handleChoice(choiceId) {
+  const choiceMap = engine.getChoiceMap();
+  const payload = choiceMap.get(choiceId);
 
-// Petit helper
-function wait(ms) {
-  return new Promise((r) => setTimeout(r, ms));
-}
+  if (!payload) return;
 
-/* =========================
-   TYPEWRITER (cinéma)
-   ========================= */
-let isTyping = false;
-
-function getPauseForChar(ch) {
-  if (ch === ",") return 120;
-  if (ch === ";" || ch === ":") return 180;
-  if (ch === ".") return 280;
-  if (ch === "!" || ch === "?") return 320;
-  if (ch === "\n") return 220;
-  if (ch === "…") return 420;
-  return 0;
-}
-
-function typeWriter(text, speed = 40) {
-  return new Promise((resolve) => {
-    const el = textContainer;
-    if (!el) return resolve();
-
-    el.textContent = "";
-    let i = 0;
-    isTyping = true;
-
-    function step() {
-      if (!isTyping) {
-        el.textContent = text;
-        return resolve();
-      }
-
-      if (i >= text.length) {
-        isTyping = false;
-        return resolve();
-      }
-
-      const ch = text[i];
-      el.textContent += ch;
-      i++;
-
-      setTimeout(step, speed + getPauseForChar(ch));
-    }
-
-    step();
-
-    // clic sur le texte = skip
-    el.onclick = () => {
-      isTyping = false;
-    };
-  });
-}
-
-function fadeToBlack(ms = 1200){
-  if (!fade) return wait(ms);
-  fade.classList.add("on");
-  return wait(ms);
-}
-
-function fadeFromBlack(ms = 1200){
-  if (!fade) return wait(ms);
-  fade.classList.remove("on");
-  return wait(ms);
-}
-async function transitionToImage(newImageUrl, ms = 900){
-  await fadeToBlack(ms);
-
-  if (scene1Image && newImageUrl){
-    // on change l'image pendant que l'écran est noir
-    scene1Image.style.backgroundImage = `url("${newImageUrl}")`;
-    scene1Image.classList.add("is-visible"); // au cas où
-  }
-
-  await fadeFromBlack(ms);
-}
-
-/* =========================
-   UI choices
-   ========================= */
-function clearChoices() {
-  if (!choiceList) return;
-  choiceList.innerHTML = "";
-}
-
-function showPanelOnly(title = "") {
-  if (choiceTitle) choiceTitle.textContent = title;
-  clearChoices(); // vide les boutons
-  if (choicePanel) choicePanel.classList.add("on"); // rend visible
-}
-
-function showChoices(title, choices) {
-  // choices = [{ id, label }]
-  if (choiceTitle) choiceTitle.textContent = title ?? "Choisir :";
-  clearChoices();
-
-  for (const c of choices) {
-    const b = document.createElement("button");
-    b.className = "choiceBtn";
-    b.type = "button";
-    b.textContent = c.label;
-    b.addEventListener("click", () => onChoice(c.id), { once: true });
-    choiceList.appendChild(b);
-  }
-
-  if (choicePanel) choicePanel.classList.add("on");
-}
-
-function hideChoices() {
-  if (choicePanel) choicePanel.classList.remove("on");
-}
-
-async function onChoice(choiceId){
-  hideChoices();
-  await goToBranch(choiceId);
-}
-
-function playSFX(src, volume = 1.0){
-  const audio = new Audio(src);
-  audio.volume = volume;
-  audio.play().catch(e => console.warn("SFX bloqué:", e));
-}
-
-/* =========================
-   MOTEUR NARRATIF
-   ========================= */
-let currentChoiceMap = new Map();
-
-// Gating (obligatoire : voir les 2 branches avant de continuer)
-let seenFamily = false;
-let seenPolitics = false;
-
-const NODES = {
-  intro: {
-    title: "",
-    text:
-      "Je ne sens plus ma jambe. Je ne sens plus mon bras.\n" +
-      "La poussière qui entre à chaque inspiration me brûle la gorge.\n" +
-      "Chaque respiration, chaque tentative de mouvement est une souffrance…",
-    choices: [
-      { id: "stay_still", label: "Ne pas bouger. Économiser l’air.", next: "still_1" },
-      { id: "listen", label: "Écouter. Chercher un son, une présence.", next: "listen_1" },
-      { id: "move_out", label: "Tenter de se dégager.", next: "move_1" },
-    ],
-  },
-
-  still_1: {
-    title: "QUE FAIRE ?",
-    text:
-      "Je ne bouge pas essayant d'économiser mes forces.\n" +
-      "Les secondes passent chacune plus douloureuse que la précédente.\n" +
-      "L’air est lourd, chaque inspiration est difficile, épuisante.",
-    choices: [
-      { id: "still_keep", label: "Rester ainsi. S'économiser en espérant... une aide providentielle.", next: "still_2" },
-      { id: "still_change", label: "Changer légèrement de position.", next: "move_1" },
-    ],
-  },
-
-  listen_1: {
-    title: "QUE FAIRE ?",
-    text:
-      "Je tente de bloquer ma respiration pour mieux entendre.\n" +
-      "Au loin… un bruit de pas... Amicaux... Ou non... Une illusion peut-être.",
-    choices: [
-      { id: "listen_focus", label: "Se concentrer. Écouter encore.", next: "listen_2" },
-      { id: "listen_call", label: "Se risquer à appeler à l'aide.", next: "call_1" },
-    ],
-  },
-
-  call_1: {
-    title: "QUE FAIRE ?",
-    text:
-      "J'ouvre la bouche, tente d'appeler tout bas.\n" +
-      "Rien ne sort...\n" +
-      "Un souffle cassé... de la poussière entre.",
-    choices: [
-      { id: "call_stop", label: "Cesser de s'acharner. S'économiser.", next: "still_1" },
-      { id: "call_again", label: "Appeler une seconde fois.", next: "call_2" },
-    ],
-  },
-  still_2: {
-    title: "ET MAINTENANT...",
-    text: 
-    "Je reste immobile, la douleur augmente encore et encore, il faut que ça s'arrête...\n" +
-    "La mort me tend les bras, elle semble si douce, comme une délivrance",
-    choices: [
-        { id: "back_intro", label: "Tenter de résister", next: "intro" },
-        { id: "remember1", label: "Se laisser glisser", next: "TV_news"}
-    ],
-  },
-  move_1: {
-    title: "…",
-    text: "Je bouges d’un millimètre à grands efforts. Quelque chose grince au-dessus de moi.\n" +
-    "La douleur est insoutenable...\n" +
-    "Impossible de me dégager.",
-    choices: [
-        { id: "back_still_1", label: "Arrêter de bouger", next: "still_1" },
-        { id: "fall_unconscious", label: "Essayer de se dégager encore", next: "fall_unconscious"}
-    ],
-  },
-  listen_2: {
-    title: "…",
-    text: "Le bruit semble se rapprocher...\n" +
-    "Des pas... Ce sont des pas...",
-    choices: [
-        { id: "look", label: "Tenter de tourner la tête", next: "move_1" },
-        { id: "stay_still", label: "Se faire discret", next : "listen_3"}
-    ],
-  },
-  call_2: {
-    title: "…",
-    text: "Je force la voix. Un son sort mais bien trop faible.\n" +
-    "Cela me provoque une irrépressible envie de tousser.",
-    choices: [{ id: "fall_unconscious", label: "Tousser", next: "fall_unconscious"}],
-  },
-  listen_3: {
-    title: "…",
-    text: "Les pas s'éloignent et je me retrouve seul de nouveau.\n" +
-    "Personne ne viendra m'aider désormais.\n" +
-    "On me laissera pour mort, ici... je n'aurai pas réussi finalement...",
-    choices: [
-        { id: "back_intro", label: "Tenter de résister encore", next: "intro" },
-        { id: "remember1", label: "Se laisser glisser", next: "TV_news"}],
-  },
-    fall_unconscious: {
-    title: "…",
-    text: "Ma vue se trouble...\n" +
-    "Je me sens partir...\n" +
-    "C'est presque agréable comme sensation...",
-    choices: [
-        { id: "back_intro", label: "Tenter de résister encore", next: "intro" },
-        { id: "remember1", label: "Se laisser glisser", next: "TV_news"}],
-  },
-  TV_news: {
-  image: "./assets/image_fond/tv_news.png",
-  transition: "fade",
-  text: "C'était il y a six ans, bien loin d'ici, dans un pays qu'auparavant j'aurais été incapable de situer sur une carte, et qui d'ailleurs n'existe même plus de nos jours, une guerre a éclaté.\n" +
-  "Une guerre civile comme on en voit tant d'autres au journal de 20h que ça ne fait même plus la une en comparaison de la victoire de l'équipe nationale de football.\n" + 
-  "Voilà l'origine de tout ça. Au départ, personne n'avait prêté un regard à cette guerre, même pas nos dirigeants, '2000 km de nos frontières c'est bien assez loin pour qu'on ne soit pas impactés' devaient-ils se dire.\n" + 
-  "Comme tout le monde, je me disais que nous, les Etats-Unis d'Europe, étions suffisamment solides et puissants pour ne pas avoir peur de ce petit conflit. C'est fou comme le fait d'être nombreux nous rend arrogant.",
-  choices: [{ id: "tv_sound", label: "Prendre la télécommande et monter le son", next: "tv_sound" },
-    ]
-  },
-  tv_sound: {
-  await: wait(400),
-    image: "./assets/image_fond/gravats_close.png",
-  transition: "fade",
-  text: "Le son grésille.\n" +
-    "Puis tout disparaît.\n\n" +
-    "Je reviens ici.\n" +
-    "Sous le béton.\n\n" +
-    "Je ne sens plus mes doigts.",
-  choices: [{ id: "focus_breath", label: "Essayer de bouger les doigts.", next: "attempt_move" }
-  ]
-  },
-  attempt_move: {
-  text:
-    "La sensation des doigts de ma main droite vient de disparaître. Dans un sens, c'est agréable, au moins je n'ai plus mal.\n" + 
-    "Dans un autre, je ne suis pas dupe, des cas comme ça j'en ai vu plus d'un dans ma vie d'avant, j'étais pompier et, je sais bien que, si je ne sens plus mes doigts, c'est que les gravats qui écrasent mon bras l'ont tué et que, si jamais je venais à m'en sortir par un miracle absolu, il faudrait m'amputer.\n" + 
-    "Sur l'instant, la seule chose à laquelle je pense c'est 'de toute façon je n'ai plus rien à écrire, alors main droite ou gauche quelle importance'. ",
-  choices: [
-    { id: "back_to_past", label: "Retrouver le fil de mes pensées.", next: "tv_news_2" }
-  ]
- },
-  tv_news_2: {
-  await: wait(400),
-    image: "./assets/image_fond/tv_news_2.png",
-  transition: "fade",
-  text: "Je disais... \n\n" +
-  "oui, la guerre civile. \n" + 
-  "Cette guerre avait duré trois ans sans que rien ne change. On faisait tous nos petites vies sans même se soucier qu'à quelques milliers de kilomètres à peine, des gens mourraient, des femmes, des enfants, des hommes, des vieux, le décompte des victimes était devenu une routine avant que le présentateur du journal ne rende l'antenne.\n" + 
-  "Maintenant, avec le recul, avec ce que j'ai vu et compris, je me dis que nous étions des monstres. Pendant trois années nous avons laissé pourrir cette situation sans bouger le petit doigt et ensuite, quand elle nous a sauté au visage, on a tous eu l'air d'une bande d'ahuris.",
-  choices: [
-    { id: "return_self", label: "Repenser à ma vie d'avant.", next: "life_before_1" },
-    { id: "back_present", label: "Revenir à ma situation.", next: "attempt_move" }
-  ]
-  },
-  // -------------------------
-  // Vie d'avant (profession / morale)
-  // -------------------------
-  life_before_1: {
-    await: wait(400),
-    image: "./assets/image_fond/home_evening.png",
-    transition: "fade",
-    text:
-      "Pendant toutes ces années, comme tout le monde, je n’ai rien fait de plus que penser à moi.\n" +
-      "Ma petite vie de famille.\n" +
-      "Le crédit de la maison.\n" +
-      "Les enfants à conduire à l'école.\n\n" +
-      "Et ma carrière de sapeur-pompier professionnel.\n" +
-      "J'étais fier de faire ce métier.",
-    choices: [
-      { id: "why_proud", label: "Pourquoi j'étais fier ?", next: "life_before_2" },
-      { id: "back_gravats_1", label: "La douleur me ramène ici.", next: "attempt_move" }
-    ]
-  },
-
-  life_before_2: {
-    image: "./assets/image_fond/locker_room.png",
-    transition: "fade",
-    text:
-      "Comme j'étais fier de faire ce métier, j'étais rentré comme volontaire à l'âge de 21 ans tout au bas de l'échelle et j'avais fait mon trou comme on dit.\n\n" +
-      "Je me revois devant mon vestiaire me préparant à aller au feu.",
-    choices: [
-      { id: "proud_save", label: "Parce que je sauvais des vies.", next: "life_before_3" },
-      { id: "proud_useful", label: "Parce que j'étais utile.", next: "life_before_3" },
-      { id: "proud_exist", label: "Parce que j'existais enfin.", next: "life_before_3" }
-    ]
-  },
-
-  life_before_3: {
-    image: "./assets/image_fond/fire_ready.png",
-    transition: "fade",
-    text:
-      "Je rentrais à chaque fin de garde chez moi avec la sensation d'avoir fait le bien autour de moi et ça me suffisait à être heureux.\n\n" +
-      "Je me souviens de chaque intervention ou presque.\n" +
-      "Souvent il m'est arrivé d'y repenser pour me remonter le moral.\n\n" +
-      "Je sais bien que ça peut paraître bizarre, mais lorsque je montais à l'ambulance je savais qu’une fois arrivé à l'hôpital, j'aurais été en mesure de diminuer la souffrance des gens qui m'avaient appelé.",
-    choices: [
-      { id: "believe_that", label: "Je le croyais sincèrement.", next: "life_before_4" },
-      { id: "doubt_that", label: "Aujourd'hui j'en doute.", next: "life_before_4" }
-    ]
-  },
-
-  life_before_4: {
-    image: "./assets/image_fond/memory_fragments_2.png",
-    transition: "fade",
-    text:
-      "Maintenant que j'y pense, j'ai certainement tué plus de personnes que j'en ai sauvées.\n" +
-      "En y restant ici, c'est qu'un juste retour des choses après tout.\n\n" +
-      "Les images de ma vie passée défilent devant mes yeux comme un film en réalité augmentée sans aucune suite logique entre les différents souvenirs.",
-    choices: [
-      { id: "back_to_present", label: "Je dois me concentrer. Respirer.", next: "attempt_move" },
-      { id: "keep_drifting", label: "Laisser les souvenirs continuer.", next: "life_flash_1" }
-    ]
-  },
-
-  // -------------------------
-  // Carrefour : double entrée obligatoire (famille / politique)
-  // -------------------------
-  life_flash_1: {
-    image: "./assets/image_fond/fire_silhouette.png",
-    transition: "fade",
-    text:
-      "Je suis debout, et même si je ne contrôle rien je n'ai pas peur car je sais que j'ai déjà vécu toutes ces scènes et je sais comment elles se terminent.\n\n" +
-      "Je sens l'adrénaline de ces instants particuliers.\n" +
-      "Cette espèce de sensation entre la peur et l'excitation.\n" +
-      "Le tout contrôlé.",
-    choices: [
-      { id: "go_family", label: "Revoir le salon ce soir-là.", next: "life_home_1" },
-      { id: "go_politics", label: "Revenir au communiqué du gouverneur.", next: "governor_intro_1" }
-    ]
-  },
-
-  // -------------------------
-  // Branche FAMILIALE
-  // -------------------------
-  life_home_1: {
-    await: wait(400),
-    image: "./assets/image_fond/home_return.png",
-    transition: "fade",
-    text:
-      "Je me revois rentrer chez moi, embrasser Angéla, faire une caresse à mon chien qui me fait la fête comme à chaque fois que je rentre.\n" +
-      "Je revois mes deux filles occupées à jouer avec leurs figurines. Je n’ose pas les déranger, elles sont sages, elles jouent ensemble toutes les deux.\n\n" +
-      "Cette situation me parait tellement réelle. Je suis moi, c'est mon corps, c'est ma vie, et pourtant je n'ai aucune prise sur les évènements.\n" +
-      "Je suis un spectateur dans mon propre corps.",
-    choices: [
-      { id: "home_deeper", label: "Rester encore un peu.", next: "life_home_2" }
-    ]
-  },
-
-  life_home_2: {
-    image: "./assets/image_fond/home_argument.png",
-    transition: "fade",
-    text:
-      "Si je pouvais je prendrais Angéla dans mes bras, je lui dirais à quel point elle me manque, à quel point j'ai tout fait pour la retrouver et à quel point je suis désolé de ne pas avoir réussi.\n\n" +
-      "Au lieu de ça, ce soir-là, on se fâchait pour une stupide histoire de rayure sur la voiture.\n" +
-      "Une putain de rayure sur cette putain de voiture.\n\n" +
-      "Une larme coule le long de ma joue.\n" +
-      "Pas une larme de tristesse.\n" +
-      "Une larme de joie.\n\n" +
-      "Au moins je l'aurais revue une dernière fois, même si ce n'est rien de plus qu'un souvenir.",
-    choices: [
-      { id: "to_gate_from_family", label: "La télévision était allumée, ce soir-là…", next: "converge_gate_1" }
-    ]
-  },
-
-  // -------------------------
-  // Branche POLITIQUE
-  // -------------------------
-  governor_intro_1: {
-    await: wait(400),
-    image: "./assets/image_fond/tv_governor.png",
-    transition: "fade",
-    text:
-      "Un soir, le gouverneur avait annoncé par un communiqué officiel que notre état allait faire quelque chose pour ce petit pays en guerre et dont tout le monde, même le présentateur du journal avait oublié l'existence.\n\n" +
-      "C'était un de ces communiqués barbant du soir, similaires à ceux des vœux.\n" +
-      "Un de ces communiqués qui commencent par l'hymne national et que l'on est obligé de regarder parce qu'ils sont diffusés sur toutes les chaînes.\n\n" +
-      "Hormis les vœux de la nouvelle année j'ai toujours aimé suivre ces communiqués.\n" +
-      "Ça signifiait toujours qu'une décision importante avait été prise, une de celles qui peuvent marquer l'histoire.",
-    choices: [
-      { id: "gov_react", label: "Regarder Angéla.", next: "governor_react_1" }
-    ]
-  },
-
-  governor_react_1: {
-    image: "./assets/image_fond/home_tv_react.png",
-    transition: "fade",
-    text:
-      "Je me souviens de sa première réaction.\n" +
-      "De cette seconde où elle comprend avant moi.\n\n" +
-      "Elle ne disait pas grand-chose.\n" +
-      "Mais je sentais que quelque chose venait de bouger.\n" +
-      "Dans la pièce.\n" +
-      "Dans l'air.\n" +
-      "Entre nous.",
-    choices: [
-      { id: "to_gate_from_politics", label: "Revoir le salon comme il était vraiment…", next: "converge_gate_1" }
-    ]
-  },
-
-  // -------------------------
-  // Gate : impose de voir les 2 blocs avant de continuer
-  // -------------------------
-  converge_gate_1: {
-    title: "…",
-    image: "./assets/image_fond/black_soft.png",
-    transition: "fade",
-    text:
-      "Je sens que je tiens quelque chose.\n" +
-      "Un fil.\n" +
-      "Mais ma mémoire refuse de me donner tout d'un seul coup.\n\n" +
-      "Il manque encore une pièce.",
-    choices: [
-      { id: "gate_continue", label: "Continuer.", next: "gate_route" }
-    ]
-  },
-
-  gate_route: {
-    title: "",
-    text: "",
-    choices: [
-      { id: "gate_route", label: "…", next: "gate_route" }
-    ]
-  },
-
-  // -------------------------
-  // Convergence (suite du chapitre)
-  // -------------------------
-  ligue_rise_1: {
-    await: wait(400),
-    image: "./assets/image_fond/ligue_rise.png",
-    transition: "fade",
-    text:
-      "Et c'est là que tout a commencé à se fissurer.\n" +
-      "Pas d'un coup.\n" +
-      "Pas avec un grand fracas.\n\n" +
-      "Doucement.\n" +
-      "Par petites phrases.\n" +
-      "Par petites peurs.\n" +
-      "Par petites lâchetés.\n\n" +
-      "La Ligue.",
-    choices: [
-      { id: "to_continue", label: "Continuer.", next: "attempt_move" } // placeholder : remplace par ligue_rise_2 ensuite
-    ]
-  },
-
-};
-
-async function runNode(nodeId) {
-  const node = NODES[nodeId];
-  if (!node) return;
-
-  // Marquage des branches (ordre libre, mais passage obligatoire des deux)
-  if (nodeId === "life_home_1") seenFamily = true;
-  if (nodeId === "governor_intro_1") seenPolitics = true;
-
-  // 🔥 Gestion image + transition
-  if (node.transition === "fade" && node.image) {
-    await transitionToImage(node.image, 900);
-  }
-  else if (node.image && scene1Image) {
-    scene1Image.style.backgroundImage = `url("${node.image}")`;
-  }
-
-  showPanelOnly(node.title ?? "");
-  await typeWriter(node.text ?? "", 45);
-  await wait(250);
-
-  showChoices(
-    node.title ?? "Que fais-tu ?",
-    (node.choices ?? []).map(c => ({ id: c.id, label: c.label }))
-  );
-
-  currentChoiceMap = new Map(
-    (node.choices ?? []).map(c => [c.id, c.next])
-  );
-}
-
-
-async function goToBranch(choiceId) {
-  const next = currentChoiceMap.get(choiceId);
-  if (!next) {
-    console.warn("Aucune suite définie pour:", choiceId);
+  if (payload.type === "choice") {
+    applyChoiceEffects(currentScene, payload.choice);
+    currentGoToNode(payload.choice.next);
     return;
   }
 
-  // Gate obligatoire : impose de voir les 2 branches (famille + politique)
-  if (next === "gate_route") {
-    if (!seenFamily) return await runNode("life_home_1");
-    if (!seenPolitics) return await runNode("governor_intro_1");
-    return await runNode("ligue_rise_1");
+  if (payload.type === "next") {
+    currentGoToNode(payload.nextNodeId);
+    return;
   }
 
-  // Exemple : transition spéciale vers TV_news
-  if (next === "TV_news") {
-    const TV_NEWS_IMAGE = "./assets/image_fond/tv_news.png"; // <-- mets ton vrai fichier
-    await transitionToImage(TV_NEWS_IMAGE, 900);
+  if (payload.type === "end") {
+    currentScene.ended = true;
+    currentChapterEndHandler({
+      chapterId: chapter1Map.id,
+      scene: currentScene,
+      map: chapter1Map
+    });
   }
-
-  await runNode(next);
 }
 
+const engine = createSceneEngine({
+  chapterCard,
+  sceneImage: scene1Image,
+  choicePanel,
+  choiceTitle,
+  choiceList,
+  textContainer,
+  fade,
+  onChoice: handleChoice
+});
+
+const {
+  clearTimers,
+  wait,
+  typeText,
+  transitionToImage,
+  clearChoices,
+  hideChoices,
+  showChoices,
+  showPanelOnly,
+  setChoiceMap
+} = engine;
+
+export const chapter1Map = {
+  id: "chapter1",
+  title: "Chapitre 1 - L'origine",
+  start: "ch1_p0_black",
+  end: "ch1_end",
+
+  nodes: {
+    ch1_p0_black: {
+  id: "ch1_p0_black",
+  label: "Black / souffle / impact",
+  kind: "scene",
+  x: 80,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_p0_black.png",
+  transition: "fade",
+  visualFx: "rubble",
+
+  text: [
+    "Il n’y a plus rien.",
+    "",
+    "Pas même la douleur, au début.",
+    "",
+    "Puis l’air revient d’un coup, lourd, brûlant, chargé de poussière.",
+    "",
+    "Et avec lui, tout le reste."
+  ],
+
+  next: "ch1_p1_eyes",
+},
+
+    ch1_p1_eyes: {
+  id: "ch1_p1_eyes",
+  label: "Les yeux s'ouvrent",
+  kind: "choice",
+  x: 260,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_p1_eyes.png",
+  transition: "fade",
+  visualFx: "rubble",
+
+  text: [
+    "J’ouvre les yeux à peine.",
+    "",
+    "Lumière sale.",
+    "Béton.",
+    "Poussière.",
+    "",
+    "Rien ne répond comme il faut.",
+    "",
+    "Pendant quelques secondes, je ne comprends pas vraiment où je suis.",
+    "",
+    "Puis le corps se charge de me le rappeler.",
+    "",
+    "Je suis vivant.",
+    "",
+    "Mais à peine."
+  ],
+
+  choices: [
+    {
+      id: "p1_focus",
+      label: "Se concentrer sur sa respiration",
+      next: "ch1_p1a_breathe",
+      effects: { playerState: { selfControl: 1 } },
+    },
+    {
+      id: "p1_panic",
+      label: "Laisser monter la panique",
+      next: "ch1_p1b_panic",
+      effects: { playerState: { selfControl: -1, stress: 1 } },
+    },
+    {
+      id: "p1_call",
+      label: "Appeler à l'aide",
+      next: "ch1_p1c_call",
+      effects: { playerState: { tendernessToAngela: 1 } },
+    },
+  ],
+},
+
+    ch1_p1a_breathe: {
+  id: "ch1_p1a_breathe",
+  label: "Respiration contrôlée",
+  kind: "scene",
+  x: 460,
+  y: 220,
+  visualFx: "rubble",
+
+  text: [
+    "Je fais ce qu’on apprend à faire quand le corps commence à paniquer.",
+    "",
+    "Inspirer peu.",
+    "Expirer plus lentement.",
+    "",
+    "Ne pas gaspiller l’air.",
+    "Ne pas laisser la peur décider à ma place.",
+    "",
+    "C’est presque ridicule, quand on y pense.",
+    "",
+    "On peut avoir passé sa vie à intervenir pour les autres,",
+    "et se retrouver à négocier avec sa propre respiration comme avec une victime qu’il faudrait empêcher de lâcher."
+  ],
+
+  next: "ch1_p2_trigger",
+},
+
+ch1_p1b_panic: {
+  id: "ch1_p1b_panic",
+  label: "Panique",
+  kind: "scene",
+  x: 460,
+  y: 300,
+  visualFx: "rubble",
+
+  text: [
+    "Mon souffle s’emballe avant même que je puisse le retenir.",
+    "",
+    "Le corps ne demande pas l’autorisation.",
+    "",
+    "Il cherche de l’air.",
+    "Il cherche une issue.",
+    "Il cherche n’importe quoi.",
+    "",
+    "Et plus il lutte, plus il me trahit.",
+    "",
+    "Je le sens très clairement :",
+    "si je le laisse faire, il me tuera avant les gravats."
+  ],
+
+  next: "ch1_p2_trigger",
+},
+
+    ch1_p1c_call: {
+  id: "ch1_p1c_call",
+  label: "Appel à l'aide",
+  kind: "scene",
+  x: 460,
+  y: 380,
+  visualFx: "rubble",
+
+  text: [
+    "J’essaie d’appeler.",
+    "",
+    "Pas fort.",
+    "Je sais très bien que je n’en ai pas les moyens.",
+    "",
+    "Ma voix sort mal, écrasée, étranglée par la poussière.",
+    "",
+    "Aucune réponse.",
+    "",
+    "Seulement ce monde cassé qui me renvoie mon propre souffle.",
+    "",
+    "Je crois que c’est là que je comprends vraiment que je suis seul."
+  ],
+
+  next: "ch1_p2_trigger",
+},
+
+    ch1_p2_trigger: {
+  id: "ch1_p2_trigger",
+  label: "Déclencheur mémoire",
+  kind: "choice",
+  x: 700,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_p2_trigger.png",
+  transition: "fade",
+  visualFx: "rubble",
+
+  text: [
+    "Je tente de me concentrer.",
+    "",
+    "Pas sur mon corps.",
+    "Surtout pas sur mon corps.",
+    "",
+    "Alors je fais ce que l’esprit humain fait toujours quand il est coincé quelque part et qu’il refuse d’admettre qu’il n’a plus de prise.",
+    "",
+    "Je cherche une cause.",
+    "Un début.",
+    "Un responsable.",
+    "",
+    "La situation du monde.",
+    "Mes choix.",
+    "Mes lâchetés.",
+    "",
+    "Je voudrais pouvoir accuser quelqu’un d’autre.",
+    "",
+    "Mais au fond, je crois que je sais déjà.",
+    "",
+    "Alors je reprends depuis le départ."
+  ],
+
+  choices: [
+    {
+      id: "memory_home",
+      label: "Revenir à la maison",
+      next: "ch1_h1_home"
+    },
+    {
+      id: "memory_firefighter",
+      label: "Repenser à ma vie d’avant",
+      next: "ch1_firefighter_1",
+      effects: {
+        playerState: {
+          dutyAnchor: 1
+        }
+      }
+    }
+  ]
+},
+
+ch1_firefighter_1: {
+  id: "ch1_firefighter_1",
+  label: "Vie d'avant / pompier",
+  kind: "scene",
+  x: 880,
+  y: 520,
+  image: "./assets/image_fond/scene1/locker_room.png",
+  transition: "fade",
+  visualFx: "firehouseCold",
+
+  text: [
+    "Avant tout ça, j’étais pompier.",
+    "",
+    "C’est étrange de le dire comme ça.",
+    "Comme si c’était une autre vie.",
+    "",
+    "Pourtant je me revois encore devant mon vestiaire.",
+    "La veste lourde.",
+    "Les bottes.",
+    "L’odeur du cuir, de la sueur froide et du matériel qu’on remet toujours à la même place.",
+    "",
+    "J’étais fier de ce métier.",
+    "",
+    "Pas fier comme on l’est sur une photo officielle.",
+    "",
+    "Fier parce que, certains jours, j’avais vraiment l’impression d’avoir une utilité dans ce monde."
+  ],
+
+  next: "ch1_firefighter_2"
+},
+
+ch1_firefighter_2: {
+  id: "ch1_firefighter_2",
+  label: "Pourquoi j'étais fier ?",
+  kind: "choice",
+  x: 1080,
+  y: 520,
+  image: "./assets/image_fond/scene1/fire_silhouette.png",
+  transition: "fade",
+  visualFx: "firehouseCold",
+
+  text: [
+    "Je crois que cette fierté ne venait pas seulement du feu, des départs en urgence ou de cette adrénaline particulière qu’on finit presque par aimer.",
+    "",
+    "Elle venait d’ailleurs.",
+    "",
+    "D’un besoin plus profond.",
+    "",
+    "Mais lequel ?"
+  ],
+
+  choices: [
+    {
+      id: "proud_save",
+      label: "Parce que je sauvais des vies",
+      next: "ch1_firefighter_3",
+      effects: {
+        setPlayerState: { proudReason: "save" },
+        playerState: { dutyAnchor: 1 }
+      }
+    },
+    {
+      id: "proud_useful",
+      label: "Parce que j’étais utile",
+      next: "ch1_firefighter_3",
+      effects: {
+        setPlayerState: { proudReason: "useful" },
+        playerState: { dutyAnchor: 1, selfControl: 1 }
+      }
+    },
+    {
+      id: "proud_exist",
+      label: "Parce que j’existais enfin",
+      next: "ch1_firefighter_3",
+      effects: {
+        setPlayerState: { proudReason: "exist" },
+        playerState: { traumaLoad: 1 }
+      }
+    }
+  ]
+},
+
+ch1_firefighter_3: {
+  id: "ch1_firefighter_3",
+  label: "Ambivalence",
+  kind: "scene",
+  x: 1280,
+  y: 520,
+  image: "./assets/image_fond/scene1/memory_fragments_2.png",
+  transition: "fade",
+  visualFx: "firehouseCold",
+
+  text: [
+    "Pendant longtemps, ça m’a suffi.",
+    "",
+    "Rentrer de garde avec cette sensation simple d’avoir fait le bien.",
+    "",
+    "D’avoir diminué un peu la souffrance de quelqu’un.",
+    "D’avoir gagné quelques minutes.",
+    "Parfois une vie.",
+    "",
+    "Aujourd’hui, évidemment, je ne suis plus aussi sûr de rien.",
+    "",
+    "Quand on regarde tout depuis les décombres, même les bonnes actions finissent par prendre une couleur douteuse.",
+    "",
+    "Je me demande parfois combien de personnes j’ai vraiment sauvées.",
+    "",
+    "Et combien j’ai seulement aidées à tenir un peu plus longtemps dans un monde qui les aurait rattrapées de toute façon."
+  ],
+
+  next: "ch1_h1_home"
+},
+
+    ch1_h1_home: {
+  id: "ch1_h1_home",
+  label: "Maison / calme apparent",
+  kind: "choice",
+  x: 980,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_h1_home.png",
+  transition: "fade",
+  visualFx: "homeWarm",
+
+  text: [
+    "La maison est là.",
+    "",
+    "Debout.",
+    "Ordinaire.",
+    "Presque intacte dans ma mémoire.",
+    "",
+    "C’est étrange comme certains souvenirs résistent mieux que les corps.",
+    "",
+    "Je revois les murs, les lumières, les gestes du soir.",
+    "",
+    "Tout ce qu’on traverse sans y penser quand on croit encore avoir du temps."
+  ],
+
+  choices: [
+    {
+      id: "home_to_family",
+      label: "Rejoindre Angela dans la cuisine",
+      next: "ch1_f1_kitchen",
+    },
+    {
+      id: "home_to_tv",
+      label: "Jeter un oeil aux infos",
+      next: "ch1_t1_tv_alert",
+    },
+  ],
+},
+
+    ch1_f1_kitchen: {
+  id: "ch1_f1_kitchen",
+  label: "Cuisine / Angela",
+  kind: "scene",
+  x: 1280,
+  y: 120,
+  image: "./assets/image_fond/scene1/ch1_f1_kitchen.png",
+  transition: "fade",
+  visualFx: "homeWarm",
+
+  text: [
+    "Quand je pense à cette soirée, je ne revois pas d’abord les mots.",
+    "",
+    "Je revois la cuisine.",
+    "",
+    "La lumière sur le plan de travail.",
+    "Le bruit léger des choses qu’on déplace sans y faire attention.",
+    "",
+    "Et Angela.",
+    "",
+    "Pas comme une image figée.",
+    "Comme une présence.",
+    "",
+    "Elle était là, derrière moi, dans cette évidence tranquille des gens qu’on aime et qu’on croit retrouver toujours.",
+    "",
+    "Aujourd’hui, c’est peut-être ça qui me fait le plus mal.",
+    "",
+    "Cette certitude que j’avais alors.",
+    "Et que je n’aurais jamais dû avoir."
+  ],
+
+  onEnter: {
+    flags: { family_branch_seen: true }
+  },
+
+  next: "ch1_f1a_contact"
+},
+
+  ch1_f1a_contact: {
+  id: "ch1_f1a_contact",
+  label: "Contact / proximité",
+  kind: "choice",
+  x: 1480,
+  y: 120,
+  visualFx: "homeWarm",
+
+  text: [
+    "Elle passe derrière moi.",
+    "",
+    "Sa main effleure mon dos.",
+    "",
+    "Un geste simple.",
+    "Presque absent.",
+    "",
+    "Un de ces gestes qu’on ne remarque pas assez quand ils existent encore.",
+    "",
+    "Avec le recul, je crois que c’était sa façon à elle de prendre ma température.",
+    "",
+    "Pas celle du corps.",
+    "L’autre.",
+    "",
+    "Celle qu’on cache même aux gens qui nous connaissent le mieux."
+  ],
+
+  choices: [
+    {
+      id: "contact_accept",
+      label: "Me laisser toucher par ce moment",
+      next: "ch1_f2_talk",
+      effects: {
+        playerState: {
+          selfControl: 1,
+          tendernessToAngela: 1
+        }
+      }
+    },
+    {
+      id: "contact_withdraw",
+      label: "Me refermer comme souvent",
+      next: "ch1_f2_talk",
+      effects: {
+        playerState: {
+          selfControl: 1
+        }
+      }
+    }
+  ]
+},
+
+  ch1_f2_talk: {
+  id: "ch1_f2_talk",
+  label: "Conversation",
+  kind: "choice",
+  x: 1680,
+  y: 120,
+  image: "./assets/image_fond/scene1/ch1_f2_talk.png",
+  transition: "fade",
+  visualFx: "homeWarm",
+
+  text: [
+    "On parle de presque rien.",
+    "",
+    "C’est souvent comme ça que commencent les conversations importantes.",
+    "",
+    "Par une phrase banale.",
+    "Un ton un peu différent.",
+    "Un silence qui reste une seconde de trop.",
+    "",
+    "Angela me regarde.",
+    "",
+    "Puis elle dit :",
+    "",
+    "« Tu reviens toujours fatigué d’endroits où tu prétends ne rien avoir laissé. »",
+    "",
+    "Je n’ai jamais oublié cette phrase.",
+    "",
+    "Peut-être parce qu’elle était vraie.",
+    "Peut-être parce qu’à ce moment-là, je ne voulais surtout pas qu’elle le soit."
+  ],
+
+  choices: [
+    {
+      id: "talk_evade",
+      label: "Esquiver encore",
+      next: "ch1_f2a_evade",
+      effects: {
+        playerState: {
+          selfControl: 1,
+          stress: 1
+        }
+      }
+    },
+    {
+      id: "talk_open",
+      label: "Laisser tomber une part du masque",
+      next: "ch1_f2b_open",
+      effects: {
+        playerState: {
+          tendernessToAngela: 1,
+          familyAnchor: 1
+        }
+      }
+    }
+  ]
+},
+
+    ch1_f2a_evade: {
+  id: "ch1_f2a_evade",
+  label: "Évitement",
+  kind: "scene",
+  x: 1880,
+  y: 80,
+  visualFx: "homeWarm",
+
+  text: [
+    "Je fais ce que je savais très bien faire.",
+    "",
+    "Je contourne.",
+    "",
+    "Un demi-sourire.",
+    "Une phrase légère.",
+    "Une plaisanterie assez pauvre pour changer la direction de la conversation.",
+    "",
+    "Sur le moment, je devais croire que je protégeais quelque chose.",
+    "",
+    "La paix du soir.",
+    "Angela.",
+    "Moi-même, peut-être.",
+    "",
+    "En réalité, je repoussais seulement ce que je n’avais pas le courage de regarder."
+  ],
+
+  next: "ch1_family_memory_choice",
+},
+
+    ch1_f2b_open: {
+  id: "ch1_f2b_open",
+  label: "Ouverture",
+  kind: "scene",
+  x: 1880,
+  y: 160,
+  visualFx: "homeWarm",
+
+  text: [
+    "Cette fois-là, je ne détourne pas complètement.",
+    "",
+    "Je ne dis pas tout.",
+    "Je n’ai jamais su faire ça.",
+    "",
+    "Mais je laisse voir quelque chose.",
+    "",
+    "Très peu.",
+    "Une fissure à peine.",
+    "",
+    "Angela ne répond pas tout de suite.",
+    "",
+    "Sa main revient se poser entre mes omoplates.",
+    "",
+    "Et pendant une seconde, une seconde seulement, j’ai la sensation absurde que rien ne pourra vraiment nous atteindre.",
+    "",
+    "C’est fou comme on peut être naïf quand on est encore aimé."
+  ],
+
+  next: "ch1_family_memory_choice"
+},
+
+ch1_family_memory_choice: {
+  id: "ch1_family_memory_choice",
+  label: "Souvenir familial",
+  kind: "choice",
+  x: 1980,
+  y: 120,
+  visualFx: "homeWarm",
+
+  text: [
+    "Le souvenir pourrait s’arrêter là.",
+    "",
+    "Ce serait plus simple.",
+    "",
+    "Garder Angela dans cette lumière.",
+    "Garder sa main entre mes omoplates.",
+    "Garder l’idée fausse d’un soir encore intact.",
+    "",
+    "Mais les souvenirs honnêtes ne s’arrêtent pas toujours au bon endroit."
+  ],
+
+  choices: [
+    {
+      id: "skip_car_argument",
+      label: "Laisser ce souvenir de côté",
+      next: "ch1_f3_outside"
+    },
+    {
+      id: "remember_car_argument",
+      label: "Revoir cette dispute absurde",
+      next: "ch1_car_scratch_1",
+      effects: {
+        playerState: {
+          tendernessToAngela: 1,
+          stress: 1
+        }
+      }
+    }
+  ]
+},
+
+ch1_car_scratch_1: {
+  id: "ch1_car_scratch_1",
+  label: "La rayure",
+  kind: "choice",
+  x: 2140,
+  y: -80,
+  image: "./assets/image_fond/scene1/home_argument.png",
+  transition: "fade",
+  visualFx: "homeWarm",
+
+  text: [
+    "Et puis il y a eu cette histoire de voiture.",
+    "",
+    "Une rayure.",
+    "",
+    "Une putain de rayure sur une putain de voiture.",
+    "",
+    "Je sais à quel point ça paraît ridicule raconté depuis ici.",
+    "J’en ai presque honte.",
+    "",
+    "Mais c’est aussi ça, une vie.",
+    "",
+    "On croit qu’elle est faite de grandes décisions, de serments, de courage et de catastrophes.",
+    "",
+    "Et puis, quand tout s’effondre, ce qui revient, c’est parfois une dispute idiote dans une cuisine trop éclairée."
+  ],
+
+  choices: [
+    {
+      id: "car_stubborn",
+      label: "M’entêter",
+      next: "ch1_car_scratch_2",
+      effects: {
+        playerState: {
+          selfControl: 1,
+          stress: 1
+        }
+      }
+    },
+    {
+      id: "car_regret",
+      label: "Comprendre trop tard que ça n’avait aucune importance",
+      next: "ch1_car_scratch_2",
+      effects: {
+        playerState: {
+          tendernessToAngela: 1,
+          traumaLoad: 1
+        }
+      }
+    }
+  ]
+},
+
+ch1_car_scratch_2: {
+  id: "ch1_car_scratch_2",
+  label: "Regret",
+  kind: "scene",
+  x: 2340,
+  y: -80,
+  image: "./assets/image_fond/scene1/kitchen_back_kiss.png",
+  transition: "fade",
+  visualFx: "homeWarm",
+
+  text: [
+    "Si je pouvais, je reprendrais ce moment.",
+    "",
+    "Pas pour gagner la dispute.",
+    "Pas même pour avoir raison.",
+    "",
+    "Je la prendrais simplement dans mes bras.",
+    "",
+    "Je lui dirais que ça n’avait aucune importance.",
+    "Que rien de tout ça n’en avait.",
+    "",
+    "Mais ce soir-là, comme tant d’autres soirs, j’ai laissé une chose minuscule prendre plus de place qu’elle ne méritait.",
+    "",
+    "Et maintenant, sous les gravats, il me reste ça aussi.",
+    "",
+    "La mémoire d’une rayure.",
+    "Et le poids ridicule de ce qu’on ne peut plus réparer."
+  ],
+
+  next: "ch1_f3_outside"
+},
+
+  ch1_f3_outside: {
+  id: "ch1_f3_outside",
+  label: "Le dehors s'invite",
+  kind: "choice",
+  x: 2080,
+  y: 120,
+
+  text: [
+    "Puis quelque chose coupe le moment.",
+    "",
+    "Un son.",
+    "Une vibration.",
+    "Peut-être la télévision.",
+    "Peut-être un téléphone.",
+    "",
+    "Je ne sais plus exactement.",
+    "",
+    "Ce dont je me souviens, en revanche, c’est de la brutalité de ce passage.",
+    "",
+    "Le monde venait de frapper à la porte.",
+    "",
+    "Et nous n’avions plus vraiment le choix que de lui ouvrir."
+  ],
+
+  choices: [
+    {
+      id: "outside_to_tv",
+      label: "Aller voir",
+      next: "ch1_after_family_bridge",
+      effects: { playerState: { politicalLucidity: 1 } }
+    },
+    {
+      id: "outside_delay",
+      label: "Retarder encore un peu",
+      next: "ch1_after_family_bridge",
+      effects: {
+        playerState: {
+          familyAnchor: 1,
+          stress: 1
+        }
+      }
+    }
+  ]
+},
+
+ch1_after_family_bridge: {
+  id: "ch1_after_family_bridge",
+  label: "Transition",
+  kind: "conditional",
+  x: 2240,
+  y: 120,
+   mapNext: ["ch1_t1_tv_alert", "ch1_home_fragile"],
+
+  text: [
+    "Le moment ne tient pas.",
+    "",
+    "Ces choses-là ne tiennent jamais longtemps.",
+    "",
+    "La maison, la chaleur, les gestes ordinaires.",
+    "",
+    "Tout cela paraît solide jusqu’à ce que le dehors décide de reprendre sa place."
+  ],
+
+  getNext: (scene) => {
+    if (!getFlag(scene, "tv_branch_seen")) {
+      return "ch1_t1_tv_alert";
+    }
+
+    return "ch1_home_fragile";
+  }
+},
+
+    ch1_t1_tv_alert: {
+  id: "ch1_t1_tv_alert",
+  label: "Télévision / alerte",
+  kind: "choice",
+  x: 1280,
+  y: 500,
+  image: "./assets/image_fond/scene1/ch1_t1_tv_alert.png",
+  transition: "fade",
+  visualFx: "tvBlue",
+
+  onEnter: {
+    flags: { tv_branch_seen: true }
+  },
+
+  text: [
+    "La télévision était déjà allumée.",
+    "",
+    "Je ne saurais plus dire depuis combien de temps.",
+    "",
+    "Le son était un peu trop fort, comme souvent dans ces moments où l’information cesse d’être un bruit de fond pour devenir quelque chose qu’on est censé écouter.",
+    "",
+    "Des images passaient en boucle.",
+    "Des cartes.",
+    "Des visages fermés.",
+    "Des bandeaux rouges en bas de l’écran.",
+    "",
+    "Rien n’était encore vraiment clair.",
+    "",
+    "Mais quelque chose insistait déjà."
+  ],
+
+  choices: [
+    {
+      id: "tv_listen",
+      label: "Écouter attentivement",
+      next: "ch1_t2_governor",
+      effects: { playerState: { politicalLucidity: 1 } }
+    },
+    {
+      id: "tv_distance",
+      label: "Minimiser, garder de la distance",
+      next: "ch1_t2_governor",
+      effects: { playerState: { selfControl: 1 } }
+    }
+  ]
+},
+
+  ch1_t2_governor: {
+  id: "ch1_t2_governor",
+  label: "Prise de parole officielle",
+  kind: "choice",
+  x: 1680,
+  y: 500,
+  image: "./assets/image_fond/scene1/ch1_t2_governor.png",
+  transition: "fade",
+  visualFx: "tvBlue",
+
+  text: [
+    "Puis le gouverneur est apparu à l’écran.",
+    "",
+    "L’air grave.",
+    "La posture droite.",
+    "Cette façon très particulière qu’ont les dirigeants de parler lentement quand ils veulent donner l’impression que tout tient encore debout.",
+    "",
+    "Il a parlé de devoir.",
+    "D’humanité.",
+    "De responsabilité.",
+    "",
+    "Notre État allait ouvrir ses frontières aux demandeurs d’asile de la guerre civile.",
+    "",
+    "Sur le moment, je me suis dit que c’était enfin autre chose que de les regarder mourir de loin.",
+    "",
+    "C’était naïf.",
+    "",
+    "Mais je crois que j’avais besoin d’y croire."
+  ],
+
+  choices: [
+    {
+      id: "gov_believe",
+      label: "Vouloir croire que quelqu’un maîtrise encore la situation",
+      next: "ch1_t3_escalation",
+      effects: { setPlayerState: { beliefHelped: true } }
+    },
+    {
+      id: "gov_doubt",
+      label: "Sentir que quelque chose ne colle déjà pas",
+      next: "ch1_t3_escalation",
+      effects: {
+        setPlayerState: { beliefHelped: false },
+        playerState: { politicalLucidity: 1, stress: 1 }
+      }
+    }
+  ]
+},
+
+  ch1_t3_escalation: {
+  id: "ch1_t3_escalation",
+  label: "Montée du trouble",
+  kind: "choice",
+  x: 2080,
+  y: 500,
+  image: "./assets/image_fond/scene1/ch1_t3_escalation.png",
+  transition: "fade",
+  visualFx: "tvBlue",
+
+  text: [
+    "Les images ont continué.",
+    "",
+    "Toujours les mêmes, ou presque.",
+    "Des colonnes de gens.",
+    "Des sacs portés à bout de bras.",
+    "Des enfants trop calmes pour leur âge.",
+    "",
+    "Les commentateurs employaient des mots propres.",
+    "Des mots qu’on peut prononcer sans rougir.",
+    "",
+    "Accueil.",
+    "Coordination.",
+    "Dispositif d’urgence.",
+    "",
+    "Mais je voyais bien que ces mots glissaient déjà vers autre chose.",
+    "",
+    "Il suffit parfois qu’une foule ait peur pour qu’un mot change de nature.",
+    "",
+    "Réfugié devient migrant.",
+    "Migrant devient problème.",
+    "Problème devient menace.",
+    "",
+    "Et à partir de là, tout devient possible."
+  ],
+
+  choices: [
+    {
+      id: "tv_keep_watching",
+      label: "Continuer à regarder jusqu’au bout",
+      next: "ch1_t4_break",
+      effects: { playerState: { politicalLucidity: 1, stress: 1 } }
+    },
+    {
+      id: "tv_cut",
+      label: "Couper avant que ça prenne trop de place",
+      next: "ch1_t4_break",
+      effects: { playerState: { selfControl: 1, familyAnchor: 1 } }
+    }
+  ]
+},
+
+ch1_t4_break: {
+  id: "ch1_t4_break",
+  label: "Fêlure",
+  kind: "conditional",
+  x: 2280,
+  y: 500,
+  visualFx: "tvBlue",
+  mapNext: ["ch1_f1_kitchen", "ch1_home_fragile"],
+
+  text: [
+    "À ce moment-là, rien n’était encore arrivé pour nous.",
+    "",
+    "Pas directement.",
+    "Pas dans la maison.",
+    "",
+    "C’est peut-être pour ça qu’on se permettait encore d’avoir des avis.",
+    "",
+    "Il y a une arrogance tranquille chez ceux qui regardent les catastrophes depuis leur canapé.",
+    "",
+    "Je l’avais aussi.",
+    "",
+    "Je ne le savais pas encore."
+  ],
+
+  getNext: (scene) => {
+    if (!getFlag(scene, "family_branch_seen")) {
+      return "ch1_f1_kitchen";
+    }
+
+    return "ch1_home_fragile";
+  }
+},
+
+    ch1_c1_false_calm: {
+  id: "ch1_c1_false_calm",
+  label: "Comprendre",
+  kind: "scene",
+  x: 2360,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_p2_trigger.png",
+  transition: "fade",
+  visualFx: "rubble",
+
+  text: () => {
+    const lines = [
+      "Je crois que c’est à partir de là que tout est devenu irréversible.",
+      "",
+      "Pas parce qu’un homme avait gagné.",
+      "Pas seulement.",
+      "",
+      "Mais parce qu’un pays entier avait accepté l’idée qu’il fallait choisir des ennemis pour se sentir encore exister."
+    ];
+
+    if (playerState.tendernessToAngela >= 2 || playerState.familyAnchor >= 2) {
+      lines.push(
+        "",
+        "À la maison, le silence avait changé de nature.",
+        "On ne se taisait plus parce qu’il n’y avait rien à dire.",
+        "On se taisait parce qu’on comprenait."
+      );
+    } else if (playerState.selfControl >= 2) {
+      lines.push(
+        "",
+        "Moi, comme souvent, j’ai rangé ça quelque part.",
+        "Assez loin pour continuer à fonctionner.",
+        "Assez près pour ne jamais vraiment l’oublier."
+      );
+    } else if (playerState.stress >= 2) {
+      lines.push(
+        "",
+        "Je me souviens d’une sensation très nette.",
+        "Celle d’avoir raté quelque chose.",
+        "Quelque chose qu’on aurait dû voir venir."
+      );
+    }
+
+    if (playerState.politicalLucidity >= 2) {
+      lines.push(
+        "",
+        "Je n’avais pas encore tous les mots.",
+        "Mais je voyais déjà le mécanisme.",
+        "La peur, la colère, puis l’ordre promis comme une délivrance."
+      );
+    } else if (playerState.beliefHelped === true) {
+      lines.push(
+        "",
+        "Une part de moi voulait encore croire que les institutions tiendraient.",
+        "Qu’un vote, même violent, restait seulement un vote.",
+        "J’avais tort."
+      );
+    } else if (playerState.beliefHelped === false) {
+      lines.push(
+        "",
+        "Une part de moi savait déjà que les discours avaient gagné.",
+        "Pas parce qu’ils étaient vrais.",
+        "Parce qu’ils avaient trouvé où frapper."
+      );
+    }
+
+    lines.push(
+      "",
+      "Et maintenant je suis là.",
+      "Sous le béton.",
+      "",
+      "À chercher encore où tout a vraiment commencé."
+    );
+
+    return lines;
+  },
+
+  next: "ch1_r1_rubble_return"
+},
+
+    ch1_r1_rubble_return: {
+  id: "ch1_r1_rubble_return",
+  label: "Retour sous les gravats",
+  kind: "scene",
+  x: 2580,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_r1_rubble_return.png",
+transition: "fade",
+visualFx: "rubble",
+
+  text: [
+    "Puis tout revient.",
+    "",
+    "Le poids.",
+    "La poussière.",
+    "La douleur.",
+    "",
+    "Le présent ne me laisse jamais longtemps tranquille."
+  ],
+  next: "ch1_r2_hold_on"
+},
+
+    ch1_r2_hold_on: {
+  id: "ch1_r2_hold_on",
+  label: "Tenir",
+  kind: "scene",
+  x: 2780,
+  y: 300,
+  image: "./assets/image_fond/scene1/ch1_r2_hold_on.png",
+  transition: "fade",
+  visualFx: "rubble",
+  
+  text: () => [
+    "Je ferme les yeux une seconde. Pas pour fuir. Pour reprendre prise.",
+    "",
+    getScene1MikaStateText(),
+    "",
+    "Je ne peux pas encore mourir.",
+    "Pas avant d’avoir compris."
+  ],
+  next: "ch1_end"
+},
 
 /* =========================
-   START SCENE 1
-   ========================= */
-export async function startScene1() {
-  clearTimers();
+   AJOUTS CHAPITRE 1
+========================= */
 
-  showScreen("scene1");
+ch1_home_fragile:{
+  id:"ch1_home_fragile",
+  label:"Le calme",
+  kind:"scene",
+  x:2140,
+  y:120,
+  image:"./assets/image_fond/scene1/home_evening.png",
+  transition:"fade",
+  visualFx: "homeWarm",
 
-  // Reset visuels
-  if (chapterCard) chapterCard.classList.remove("is-visible");
-  if (scene1Image) scene1Image.classList.remove("is-visible");
+  text:[
+    "Après ça, la maison est restée la même en apparence.",
+    "",
+    "Les mêmes pièces.",
+    "Les mêmes lumières.",
+    "Les mêmes gestes du soir.",
+    "",
+    "C’est ça qui est terrible, avec les moments où tout commence vraiment à changer.",
+    "",
+    "Ils ressemblent beaucoup trop aux autres.",
+    "",
+    "Les filles jouaient dans le salon.",
+    "Angela lisait, ou faisait semblant.",
+    "Les informations tournaient en fond.",
+    "",
+    "Et moi, comme beaucoup d’autres, je croyais encore que l’Histoire était quelque chose qui arrivait ailleurs."
+  ],
 
-  // Reset UI texte/choix
-  if (textContainer) textContainer.textContent = "";
-  clearChoices();
-  hideChoices();
+  next:"ch1_angela_warning"
+},
 
-  // Carton
-  if (chapterCard) {
-    chapterCard.textContent = "Chapitre 1 - L'origine";
-    await wait(50);
-    chapterCard.classList.add("is-visible");
-  }
 
-  // Audio
-  if (ambience) {
-    try {
-      ambience.currentTime = 0;
-      ambience.volume = 1.0;
-      await ambience.play();
-    } catch (e) {
-      console.warn("Audio scene1 bloqué :", e);
+
+ch1_angela_warning:{
+  id:"ch1_angela_warning",
+  label:"Angela avertit",
+  kind:"choice",
+  x:2280,
+  y:120,
+  image:"./assets/image_fond/scene1/angela_warning.png",
+  transition:"fade",
+  visualFx: "homeWarm",
+
+  text:[
+    "Angela, elle, ne regardait pas les choses de cette manière.",
+    "",
+    "Elle avait cette façon de voir venir les coups avant les autres.",
+    "Ça m’agaçait parfois.",
+    "",
+    "Pas parce qu’elle se trompait.",
+    "",
+    "Parce que, trop souvent, elle avait raison.",
+    "",
+    "Ce soir-là, elle a regardé l’écran sans parler pendant quelques secondes.",
+    "",
+    "Puis elle a dit simplement :",
+    "",
+    "« Ça va mal finir cette histoire. »"
+  ],
+
+  choices:[
+    {
+      id: "angela_take_seriously",
+      label:"La prendre au sérieux",
+      next:"ch1_far_war",
+      effects:{
+        playerState:{
+          politicalLucidity:1,
+          tendernessToAngela:1
+        }
+      }
+    },
+    {
+      id: "angela_minimize",
+      label:"Minimiser ses craintes",
+      next:"ch1_far_war",
+      effects:{
+        playerState:{
+          selfControl:1
+        }
+      }
+    }
+  ]
+},
+
+ch1_far_war:{
+  id:"ch1_far_war",
+  label:"Guerre lointaine",
+  kind:"scene",
+  x:2420,
+  y:120,
+  image:"./assets/image_fond/scene1/tv_news_v1.png",
+  transition:"fade",
+  visualFx: "tvBlue",
+
+  text:[
+    "Au départ, pourtant, ce n’était qu’une guerre lointaine.",
+    "",
+    "Une de plus.",
+    "",
+    "Une guerre civile dans un pays que, quelques années plus tôt, j’aurais été incapable de situer correctement sur une carte.",
+    "",
+    "On en voyait les images au journal.",
+    "Des immeubles éventrés.",
+    "Des familles sur les routes.",
+    "Des chiffres de morts qui défilaient entre deux sujets plus légers.",
+    "",
+    "Et puis on passait à autre chose.",
+    "",
+    "C’est fou comme on peut s’habituer à la souffrance des autres quand elle reste à bonne distance."
+  ],
+
+  next:"ch1_border_open"
+},
+
+ch1_border_open:{
+  id:"ch1_border_open",
+  label:"Ouverture",
+  kind:"scene",
+  x:2580,
+  y:220,
+  image:"./assets/image_fond/scene1/migrants_arrival.png",
+  transition:"fade",
+  visualFx: "streetCold",
+
+  text:[
+    "Puis la distance a cessé d’exister.",
+    "",
+    "Quand le gouverneur a ouvert les frontières, les gens sont arrivés.",
+    "",
+    "Pas des masses abstraites.",
+    "Pas des flux.",
+    "",
+    "Des familles.",
+    "Des hommes épuisés.",
+    "Des femmes qui tenaient encore debout uniquement parce qu’un enfant marchait à côté d’elles.",
+    "Des vieux qu’on aurait juré déjà morts si leurs yeux n’avaient pas encore cherché quelque chose autour d’eux.",
+    "",
+    "Au début, on a appelé ça un devoir moral.",
+    "",
+    "Et pendant un court instant, j’ai voulu croire que nous étions capables d’être à la hauteur."
+  ],
+
+  next:"ch1_media_turn"
+},
+
+ch1_media_turn:{
+  id:"ch1_media_turn",
+  label:"Discours médiatique",
+  kind:"scene",
+  x:2740,
+  y:220,
+  image:"./assets/image_fond/scene1/media_discourse.png",
+  transition:"fade",
+  visualFx: "tvBlue",
+
+  text:[
+    "Puis les mots ont commencé à changer.",
+    "",
+    "Pas brutalement.",
+    "Jamais brutalement.",
+    "",
+    "C’est comme ça que les choses prennent racine.",
+    "",
+    "Un soir, on parle d’accueil.",
+    "Le lendemain, de gestion.",
+    "Puis de crise.",
+    "Puis d’invasion.",
+    "",
+    "Sur les plateaux, les mêmes visages revenaient en boucle.",
+    "Les mêmes colères propres.",
+    "Les mêmes fausses inquiétudes.",
+    "",
+    "On ne disait pas encore qu’il fallait haïr.",
+    "",
+    "On demandait simplement, avec l’air sérieux des gens raisonnables,",
+    "combien de temps encore nous allions accepter de perdre notre pays."
+  ],
+
+  next:"ch1_firehouse_shift"
+},
+
+ch1_firehouse_shift:{
+  id:"ch1_firehouse_shift",
+  label:"Caserne",
+  kind:"scene",
+  x:2900,
+  y:220,
+  image:"./assets/image_fond/scene1/locker_room.png",
+  transition:"fade",
+  visualFx: "firehouseCold",
+
+  text:[
+    "Même à la caserne, quelque chose changeait.",
+    "",
+    "Au début, ce n’était presque rien.",
+    "",
+    "Des départs plus tendus.",
+    "Des regards plus méfiants dans certaines rues.",
+    "Des interventions où l’on sentait que notre uniforme ne suffisait plus à rassurer.",
+    "",
+    "Puis on nous a équipés de gilets pare-balles.",
+    "",
+    "Je me souviens très bien du mien.",
+    "",
+    "Du poids.",
+    "De la gêne.",
+    "Et surtout de cette impression désagréable de trahir quelque chose en l’enfilant.",
+    "",
+    "J’étais pompier.",
+    "",
+    "J’étais là pour porter secours.",
+    "",
+    "Je ne comprenais pas encore à quel moment un homme qui vient aider peut devenir une cible."
+  ],
+
+  next:"ch1_violence_rise"
+},
+
+ch1_violence_rise:{
+  id:"ch1_violence_rise",
+  label:"Montée violences",
+  kind:"scene",
+  x:3060,
+  y:220,
+  image:"./assets/image_fond/scene1/street_tensions.png",
+  transition:"fade",
+  visualFx: "streetCold",
+
+  text:[
+    "Les violences ont suivi.",
+    "",
+    "Comme si tout le monde n’attendait plus qu’une autorisation.",
+    "",
+    "Des insultes d’abord.",
+    "Des vitres brisées.",
+    "Des camps attaqués.",
+    "",
+    "Puis des corps.",
+    "",
+    "Chaque jour, dans nos ambulances, nous intervenions pour des hommes tabassés, des femmes blessées, des gamins en état de choc.",
+    "",
+    "On parlait d’actes isolés.",
+    "",
+    "Il y en avait tous les jours.",
+    "",
+    "À force d’être isolés ensemble, les actes finissent par dessiner un pays."
+  ],
+
+  next:"ch1_ligue_surge"
+},
+
+ch1_ligue_surge:{
+  id:"ch1_ligue_surge",
+  label:"Montée Ligue",
+  kind:"scene",
+  x:3220,
+  y:220,
+  image:"./assets/image_fond/scene1/ligue_rise.png",
+  transition:"fade",
+  visualFx: "ligueRed",
+
+  text:[
+    "La Ligue n’a pas créé tout ça à elle seule.",
+    "",
+    "Ce serait trop facile de le croire.",
+    "",
+    "Elle a fait quelque chose de bien plus efficace.",
+    "",
+    "Elle a donné une forme à ce que beaucoup ressentaient déjà.",
+    "Une langue.",
+    "Des slogans.",
+    "Des ennemis.",
+    "",
+    "Leur dirigeant parlait avec cette assurance glaciale des hommes qui savent transformer la peur des autres en marchepied.",
+    "",
+    "Il ne disait presque jamais les choses frontalement.",
+    "",
+    "Il n’en avait pas besoin.",
+    "",
+    "Le pays complétait les phrases à sa place."
+  ],
+
+  next:"ch1_ligue_vote"
+},
+
+ch1_ligue_vote:{
+  id:"ch1_ligue_vote",
+  label:"Election",
+  kind:"scene",
+  x:3380,
+  y:220,
+  image:"./assets/image_fond/scene1/ch1_ligue_vote.png",
+  transition:"fade",
+  visualFx: "ligueRed",
+
+  text:[
+    "Le jour des élections, Angela et moi sommes allés voter.",
+    "",
+    "Les enfants nous accompagnaient.",
+    "",
+    "Ils ne comprenaient pas tout, bien sûr.",
+    "Ils étaient surtout contents de mettre le papier dans l’enveloppe.",
+    "",
+    "Nous, on y tenait.",
+    "",
+    "À cette idée simple, presque naïve, qu’il fallait apprendre aux enfants que les choses se changent ainsi.",
+    "Avec un bulletin.",
+    "Avec une voix.",
+    "Avec un geste calme posé au milieu du bruit.",
+    "",
+    "Devant le bureau de vote, les militants de la Ligue se tenaient déjà comme si tout leur appartenait.",
+    "",
+    "Je sentais Angela bouillir à côté de moi.",
+    "",
+    "Je lui ai serré la main pour lui dire de se calmer.",
+    "",
+    "Aujourd’hui encore, je ne sais pas si c’était de la prudence.",
+    "Ou déjà de la lâcheté."
+  ],
+
+  next:"ch1_end_election"
+},
+
+ch1_end_election:{
+  id:"ch1_end_election",
+  label:"78%",
+  kind:"scene",
+  x:3540,
+  y:220,
+  image:"./assets/image_fond/scene1/ligue_election.png",
+  transition:"fade",
+  visualFx: "ligueRed",
+
+  text:[
+    "Ce fut la dernière élection qu’il y eut ici.",
+    "",
+    "Le soir même, les résultats apparaissaient au journal de vingt heures.",
+    "",
+    "Je me souviens encore des cris de joie dans la rue.",
+    "Et des mines déconfites dans la maison.",
+    "",
+    "À l’annonce du score :",
+    "",
+    "78 %.",
+    "",
+    "Sur les 326 membres de la chambre des députés,",
+    "254 étaient passés sous les couleurs de la Ligue.",
+    "",
+    "Ce soir-là, notre État a dit adieu à la démocratie.",
+    "",
+    "Et comment lui en vouloir."
+  ],
+
+  next:"ch1_c1_false_calm"
+},
+
+    ch1_end: {
+  id: "ch1_end",
+  label: "Fin chapitre 1",
+  kind: "end",
+  x: 2980,
+  y: 300,
+  image: "./assets/image_fond/black_soft.png",
+  transition: "fade",
+
+  text: [
+    "L’origine n’explique pas tout.",
+    "",
+    "Mais elle laisse une trace."
+  ]
+},
+  },
+};
+
+function resolveText(node, scene) {
+  const raw = typeof node.text === "function" ? node.text(scene) : node.text;
+  if (Array.isArray(raw)) return raw;
+  if (typeof raw === "string") return [raw];
+  return [];
+}
+
+function applyOnEnter(node, scene) {
+  if (!node?.onEnter) return;
+
+  if (node.onEnter.flags) {
+    for (const [key, value] of Object.entries(node.onEnter.flags)) {
+      setFlag(scene, key, value);
     }
   }
 
-  // Fade out du carton
-  timers.push(
-    setTimeout(() => {
-      if (chapterCard) chapterCard.classList.remove("is-visible");
-    }, 3000)
+  if (node.onEnter.playerState) {
+    applyPlayerStatePatch(node.onEnter.playerState);
+  }
+
+  if (node.onEnter.setPlayerState) {
+    applyPlayerStateSet(node.onEnter.setPlayerState);
+  }
+}
+
+function applyChoiceEffects(scene, choice) {
+  if (!choice?.effects) return;
+
+  if (choice.effects.playerState) {
+    applyPlayerStatePatch(choice.effects.playerState);
+  }
+
+  if (choice.effects.setPlayerState) {
+    applyPlayerStateSet(choice.effects.setPlayerState);
+  }
+
+  if (choice.effects.flags) {
+    for (const [key, value] of Object.entries(choice.effects.flags)) {
+      setFlag(scene, key, value);
+    }
+  }
+
+  savePlayerState();
+}
+
+function getNode(nodeId) {
+  return chapter1Map.nodes[nodeId] || null;
+}
+
+function getNextNodeId(scene, node) {
+  if (!node) return null;
+  if (typeof node.getNext === "function") return node.getNext(scene);
+  if (node.next) return node.next;
+  return null;
+}
+
+function normalizeRendererDeps(deps = {}) {
+  const noop = () => {};
+
+  return {
+    mount: deps.mount || document.getElementById("app") || document.body,
+    onChapterEnd: deps.onChapterEnd || noop,
+    onStateChange: deps.onStateChange || noop,
+    beforeRender: deps.beforeRender || noop,
+    afterRender: deps.afterRender || noop,
+  };
+}
+
+function applyScene1VisualFx(fxName) {
+  if (!scene1Image) return;
+
+  scene1Image.classList.remove(
+    "fx-rubble",
+    "fx-homeWarm",
+    "fx-tvBlue",
+    "fx-streetCold",
+    "fx-ligueRed",
+    "fx-firehouseCold"
   );
 
-  // Image puis lancement du node "intro"
-  timers.push(
-    setTimeout(() => {
-      if (!scene1Image) return;
-      scene1Image.style.backgroundImage = `url("${TEMP_SCENE_IMAGE}")`;
+  if (!fxName) return;
+
+  const allowedFx = [
+    "rubble",
+    "homeWarm",
+    "tvBlue",
+    "streetCold",
+    "ligueRed",
+    "firehouseCold"
+  ];
+
+  if (allowedFx.includes(fxName)) {
+    scene1Image.classList.add(`fx-${fxName}`);
+  }
+}
+
+async function renderNode(node, scene, deps, goToNode) {
+  const { beforeRender, afterRender } = deps;
+
+  currentGoToNode = goToNode;
+  currentScene = scene;
+  currentChapterEndHandler = deps.onChapterEnd;
+
+  clearTimers();
+  hideChoices();
+  showPanelOnly("");
+
+  beforeRender({ node, scene });
+  if (node.transition === "fade" && node.image) {
+  await engine.transitionToImage(node.image, 900);
+} else if (node.image && scene1Image) {
+  scene1Image.style.backgroundImage = `url("${node.image}")`;
+  scene1Image.classList.add("is-visible");
+}
+
+  applyScene1VisualFx(node.visualFx || "");
+
+  const lines = resolveText(node, scene);
+  await typeText(lines, {
+    speed: 32,
+    lineGapMs: 360,
+    clearFirst: true
+  });
+
+  if (node.kind === "choice" && Array.isArray(node.choices)) {
+    const uiChoices = node.choices.map((choice) => ({
+      id: choice.id,
+      label: choice.label
+    }));
+
+    showChoices("", uiChoices, {
+      initialDelayMs: 250,
+      staggerMs: 120
+    });
+
+    setChoiceMap(
+      new Map(
+        node.choices.map((choice) => [
+          choice.id,
+          { type: "choice", choice }
+        ])
+      )
+    );
+  } else if (node.kind === "end") {
+    showChoices("", [
+  { id: "end_scene1", label: "Afficher la carte du chapitre" }
+]);
+
+    setChoiceMap(
+      new Map([
+        ["end_scene1", { type: "end" }]
+      ])
+    );
+  } else {
+    const nextNodeId = getNextNodeId(scene, node);
+
+    showChoices("", [
+      {
+        id: "next_scene1",
+        label: nextNodeId ? "Continuer" : "Finir"
+      }
+    ]);
+
+    if (nextNodeId) {
+      setChoiceMap(
+        new Map([
+          ["next_scene1", { type: "next", nextNodeId }]
+        ])
+      );
+    } else {
+      setChoiceMap(
+        new Map([
+          ["next_scene1", { type: "end" }]
+        ])
+      );
+    }
+  }
+
+  afterRender({ node, scene });
+}
+
+export function getChapter1Progress(state = {}) {
+  const scene = ensureSceneState(state);
+
+  return {
+    chapterId: chapter1Map.id,
+    title: chapter1Map.title,
+    currentNodeId: scene.currentNodeId,
+    visitedNodes: [...scene.visitedNodes],
+    visitedSet: { ...scene.visitedSet },
+    flags: { ...scene.flags },
+    playerState: { ...playerState },
+    ended: scene.ended
+  };
+}
+
+export function getChapter1MapData() {
+  return chapter1Map;
+}
+
+export function resetScene1(state = {}) {
+  state.scene1 = {
+    currentNodeId: null,
+    visitedNodes: [],
+    visitedSet: {},
+    flags: {},
+    ended: false
+  };
+  return state.scene1;
+}
+
+async function playScene1Intro() {
+  clearTimers();
+  hideChoices();
+
+  if (textContainer) {
+    textContainer.innerHTML = "";
+    textContainer.style.opacity = "0";
+  }
+
+  if (choicePanel) {
+    choicePanel.classList.remove("on");
+  }
+
+  if (scene1Image) {
+    scene1Image.style.backgroundImage = 'url("./assets/image_fond/black_soft.png")';
+    scene1Image.classList.add("is-visible");
+  }
+
+  if (chapterCard) {
+    chapterCard.textContent = chapter1Map.title;
+
+    // reset propre avant affichage
+    chapterCard.classList.remove("is-hiding");
+    chapterCard.classList.remove("is-visible");
+
+    // force le navigateur à prendre l'état initial
+    void chapterCard.offsetWidth;
+
+    // affichage du carton
+    chapterCard.classList.add("is-visible");
+  }
+
+  // temps d'affichage du carton
+  await wait(1800);
+
+  if (chapterCard) {
+    // disparition lente
+    chapterCard.classList.add("is-hiding");
+    chapterCard.classList.remove("is-visible");
+  }
+
+  await wait(1400);
+
+  if (chapterCard) {
+    // nettoyage pour les prochains lancements
+    chapterCard.classList.remove("is-hiding");
+  }
+
+  if (textContainer) {
+    textContainer.style.opacity = "1";
+  }
+}
+
+export async function startScene1(state = {}, deps = {}) {
+  const scene = ensureSceneState(state);
+  const rendererDeps = normalizeRendererDeps(deps);
+
+  showScreen("scene1");
+
+  const isFirstLaunch = !scene.currentNodeId;
+
+  if (isFirstLaunch) {
+    await playScene1Intro();
+  } else {
+    if (scene1Image) {
       scene1Image.classList.add("is-visible");
+    }
+    if (textContainer) {
+      textContainer.style.opacity = "1";
+    }
+  }
 
-      // 1s après image => démarre le moteur narratif
-      setTimeout(() => {
-        runNode("intro");
-      }, 1000);
-    }, 10000)
-  );
+  async function goToNode(nodeId) {
+    const node = getNode(nodeId);
+    if (!node) {
+      throw new Error(`[scene1] Node introuvable: ${nodeId}`);
+    }
+
+    scene.currentNodeId = nodeId;
+    visitNode(scene, nodeId);
+    applyOnEnter(node, scene);
+    rendererDeps.onStateChange(getChapter1Progress(state));
+    await renderNode(node, scene, rendererDeps, goToNode);
+  }
+
+  const entryNodeId = scene.currentNodeId || chapter1Map.start;
+  await goToNode(entryNodeId);
+
+  return {
+    goToNode,
+    getProgress: () => getChapter1Progress(state),
+    getMap: () => chapter1Map,
+    reset: () => resetScene1(state)
+  };
 }
