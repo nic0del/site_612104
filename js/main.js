@@ -1073,14 +1073,11 @@ if (DOM.btnCopyGameLink) {
   });
 }
 
+const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScX7PEZ1vHZMAXEZFEIROjlqytfK9zrXNuV0-F__CzrCwFmxQ/viewform?usp=publish-editor";
+
 if (DOM.btnSupportFeedback) {
   DOM.btnSupportFeedback.addEventListener("click", () => {
-    const subject = encodeURIComponent("Retour sur 612104");
-    const body = encodeURIComponent(
-      "Bonjour Nicolas,\n\nJ’ai joué à 612104 et voici mon retour :\n\n"
-    );
-
-    window.location.href = `mailto:delage.nic@gmail.com?subject=${subject}&body=${body}`;
+    window.open(FEEDBACK_FORM_URL, "_blank", "noopener,noreferrer");
   });
 }
 /* -----------------------------
