@@ -7,12 +7,19 @@ import {
   isMuted,
   getTargetVolume,
   pauseOnHidden
-} from "./audio.js?v=62808d0";
-import { startScene1 } from "./scenes/scene1.js?v=62808d0";
-const gameState = {};
-import { startGuestSession, startAccountSession, playerState } from "./state.js";
+} from "./audio.js";
+import { startScene1 } from "./scenes/scene1.js";
+
+import {
+  startGuestSession, startAccountSession, playerState, savePlayerState,
+  replacePlayerState, normalizePlayerState, resetPlayerState, getAccountId
+} from "./state.js";
+import { createSaveQueue } from "./saveQueue.js";
+import { startScene2, chapter2Map } from "./scenes/scene2.js";
+import { chapter1Map } from "./scenes/scene1.js";
+import { stopChapter } from "./scenes/chapterRunner.js";
 import { supabase } from "./supabase.js";
-import { renderChapterMap } from "./chapterMap.js";
+import { renderChapterMap, stopChapterMap } from "./chapterMap.js";
 import { novelBonusTexts } from "./bonusTexts.js";
 
 /* -----------------------------
@@ -57,6 +64,7 @@ chapter1MapTheme: document.getElementById("chapter1MapTheme"),
   btnSubmitSignup: document.getElementById("btnSubmitSignup"),
   btnForgotPassword: document.getElementById("btnForgotPassword"),
   btnStart: document.getElementById("btnStart"),
+  btnStartChapter2: document.getElementById("btnStartChapter2"),
   btnNewGame: document.getElementById("btnNewGame"),
   btnSupport: document.getElementById("btnSupport"),
   btnBonusChapter1: document.getElementById("btnBonusChapter1"),
@@ -80,7 +88,59 @@ chapter1MapTheme: document.getElementById("chapter1MapTheme"),
   btnGameHome: document.getElementById("btnGameHome")
 };
 
-let pendingMode = "guest"; // "guest" | "account"
+let pendingMode = "guest";
+let cloudReady = false;
+let launching = false;
+let launchGeneration = 0;
+let audioGeneration = 0;
+
+function setSaveStatus(message) {
+  for (const id of ["saveStatus", "menuSaveStatus"]) {
+    const element = document.getElementById(id);
+    if (element) element.textContent = message;
+  }
+}
+const saveQueue = createSaveQueue(
+  job => saveGame(job.sceneId, job.snapshot, job.owner),
+  status => setSaveStatus(status === "saved" ? "Progression synchronisée."
+    : status === "saving" ? "Synchronisation…"
+    : "Synchronisation impossible. Progression conservée sur cet appareil.")
+);
+function checkpoint() {
+  const localSaved = savePlayerState();
+  if (pendingMode === "account" && cloudReady) {
+    const key = playerState.currentChapter === "chapter2" ? "scene2" : "scene1";
+    saveQueue.enqueue({ owner: getAccountId(),
+      sceneId: playerState[key]?.currentNodeId || "new_game", snapshot: playerState });
+  } else {
+    setSaveStatus(pendingMode === "guest"
+      ? "Invité : progression conservée dans cet onglet."
+      : "Progression locale. Reconnecte-toi pour reprendre la synchronisation.");
+  }
+  if (!localSaved) setSaveStatus("Sauvegarde locale indisponible. Garde cet onglet ouvert.");
+}
+async function prepareAccountSession(userId) {
+  await saveQueue.reset();
+  startAccountSession(userId);
+  pendingMode = "account";
+  cloudReady = false;
+  try {
+    const remote = await loadGame(userId);
+    if (remote) {
+      const normalized = normalizePlayerState(remote.player_state, remote.scene_text);
+      normalized.savedAt ||= remote.updated_at;
+      if (Date.parse(normalized.savedAt || "") >= Date.parse(playerState.savedAt || "1970-01-01")) {
+        replacePlayerState(normalized);
+        savePlayerState({ touch: false });
+      }
+    }
+    cloudReady = true;
+    setSaveStatus("Progression chargée.");
+  } catch (error) {
+    console.warn("Chargement distant impossible :", error);
+    setSaveStatus("Progression locale. Reconnecte-toi pour reprendre la synchronisation.");
+  }
+}
 
 /* -----------------------------
    Utils
@@ -319,12 +379,12 @@ async function updateUserLabels() {
 /* -----------------------------
    Save / Load
 ----------------------------- */
-async function saveGame(sceneId, currentPlayerState) {
+async function saveGame(sceneId, currentPlayerState, owner = getAccountId()) {
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("Pas connecté");
+  if (!user || user.id !== owner) throw new Error("La session du compte a changé.");
 
   const { error } = await supabase
     .from("saves")
@@ -333,7 +393,7 @@ async function saveGame(sceneId, currentPlayerState) {
         user_id: user.id,
         scene_text: sceneId,
         player_state: currentPlayerState,
-        updated_at: new Date().toISOString()
+        updated_at: currentPlayerState.savedAt || new Date().toISOString()
       },
       {
         onConflict: "user_id"
@@ -342,17 +402,17 @@ async function saveGame(sceneId, currentPlayerState) {
 
   if (error) throw error;
 
-  console.log("SAVE:", sceneId, currentPlayerState);
+
 }
 
-window.saveGame = saveGame;
 
-async function loadGame() {
+
+async function loadGame(owner = getAccountId()) {
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (!user) return null;
+  if (!user || user.id !== owner) throw new Error("La session du compte a changé.");
 
   const { data, error } = await supabase
     .from("saves")
@@ -364,7 +424,7 @@ async function loadGame() {
 
   if (error) throw error;
 
-  console.log("LOAD:", data);
+
   return data;
 }
 
@@ -401,6 +461,10 @@ async function goToMenu() {
 
   ensureBonusState();
   updateBonusUI();
+  if (DOM.btnStart) {
+    const scene = playerState.currentChapter === "chapter2" ? playerState.scene2 : playerState.scene1;
+    DOM.btnStart.textContent = scene?.currentNodeId ? "▶ Continuer" : "▶ Commencer";
+  }
 }
 
 /* -----------------------------
@@ -422,6 +486,7 @@ function stopAudio(audio) {
 }
 
 function stopScene1Audios() {
+  audioGeneration++;
   stopAudio(DOM.scene1Impact);
   stopAudio(DOM.scene1RubbleAmbience);
   stopAudio(DOM.scene1FamilyTheme);
@@ -474,6 +539,7 @@ function getVolumeForScene1Zone(zone) {
 async function switchScene1MusicZone(zone) {
   if (currentSceneMusicZone === zone) return;
 
+  const generation = ++audioGeneration;
   const inAudio = getAudioForScene1Zone(zone);
   const targetIn = getVolumeForScene1Zone(zone);
 
@@ -513,11 +579,12 @@ async function switchScene1MusicZone(zone) {
 
   for (let i = 0; i <= steps; i++) {
     const t = i / steps;
+    if (generation !== audioGeneration) return;
     inAudio.volume = targetIn * t;
     await sleep(stepMs);
   }
 
-  setAudioBaseVolume(inAudio, targetIn);
+  if (generation === audioGeneration) setAudioBaseVolume(inAudio, targetIn);
 }
 
 function getScene1MusicZoneFromNode(node) {
@@ -582,90 +649,95 @@ function updateBonusUI() {
    Game enter / leave
 ----------------------------- */
 
+function chapterForCurrentState() {
+  return playerState.currentChapter === "chapter2" ? chapter2Map : chapter1Map;
+}
+
+function showChapterEnd() {
+  const chapter = chapterForCurrentState();
+  playerState.phase = "chapter-end";
+  checkpoint();
+  const first = chapter.id === "chapter1";
+  document.getElementById("chapterEndTitle").textContent = first ? "Chapitre 1 terminé" : "Chapitre 2 terminé";
+  document.getElementById("chapterEndSummary").textContent = first
+    ? "Les premiers fragments de la mémoire de Mika ont retrouvé leur place."
+    : "La ville a basculé. Mika rejoint le fourgon. La suite de son histoire reste à venir.";
+  document.getElementById("chapterEndUnlock")?.classList.toggle("hidden", !first);
+  DOM.btnReadNovelChapter1?.classList.toggle("hidden", !playerState.unlockedBonus.chapter1Novel);
+  DOM.btnStartChapter2?.classList.toggle("hidden", !first);
+  showScreen("chapter-end");
+}
+
+async function showChapterMap({ chapterId, scene, map }) {
+  const generation = launchGeneration;
+  if (chapterId === "chapter1") unlockBonusChapter1();
+  playerState.phase = "map";
+  checkpoint();
+  await switchScene1MusicZone("map");
+  if (playerState.phase !== "map" || generation !== launchGeneration) return;
+  renderChapterMap({ map, scene, onContinue: showChapterEnd });
+}
+
 async function launchScene1() {
-  if (!isUnlocked()) {
-    await tryUnlock();
-  }
-
-  if (pendingMode === "guest") {
-    startGuestSession();
-  } else {
-    startAccountSession();
-  }
-
-  currentSceneMusicZone = "none";
-  stopScene1Audios();
-
-  await updateUserLabels();
-  await fadeToBlack(900);
-
-  disableMenuBackground();
-  showScreen("scene1");
-
-  if (DOM.music) {
-    DOM.music.pause();
-    DOM.music.currentTime = 0;
-  }
-
-  await playOneShot(DOM.scene1Impact, 1);
-  await switchScene1MusicZone("rubble");
-
-  await fadeFromBlack(650);
-
-  if (pendingMode === "account") {
-    const save = await loadGame();
-
-    if (save) {
-      Object.assign(playerState, save.player_state || {});
-      Object.assign(gameState, save.player_state || {});
-    }
-  }
-
-  startScene1(gameState, {
-    mount: document.getElementById("screen-scene1"),
-
-    beforeRender: async ({ node }) => {
-      const zone = getScene1MusicZoneFromNode(node);
-      await switchScene1MusicZone(zone);
-    },
-
-    onChapterEnd: async ({ chapterId, scene, map }) => {
-      await switchScene1MusicZone("map");
-
-      renderChapterMap({
-  map,
-  scene,
-  onContinue: async () => {
-    unlockBonusChapter1();
-
-    if (pendingMode === "account") {
-      try {
-        await saveGame("chapter1_end", playerState);
-      } catch (error) {
-        console.warn("Sauvegarde du bonus impossible :", error);
-      }
-    }
-
+  if (launching) return;
+  launching = true;
+  const generation = ++launchGeneration;
+  try {
+    if (!isUnlocked()) await tryUnlock();
+    stopChapter();
+    stopChapterMap();
     currentSceneMusicZone = "none";
-    showScreen("chapter-end");
-  }
-});
-    },
-
-    onStateChange: (progress) => {
-      console.log("Progression chapitre 1 :", progress);
+    stopScene1Audios();
+    await updateUserLabels();
+    if (generation !== launchGeneration) return;
+    const chapter = chapterForCurrentState();
+    const scene = chapter.id === "chapter2" ? playerState.scene2 : playerState.scene1;
+    disableMenuBackground();
+    stopAudio(DOM.music);
+    await fadeToBlack(400);
+    if (generation !== launchGeneration) return;
+    showScreen("scene1");
+    await fadeFromBlack(400);
+    if (generation !== launchGeneration) return;
+    document.getElementById("chapterWorkNote").classList.toggle("hidden", chapter.id !== "chapter2");
+    if (scene?.ended) {
+      if (playerState.phase === "map") await showChapterMap({ chapterId: chapter.id, scene, map: chapter });
+      else { await switchScene1MusicZone("map"); showChapterEnd(); }
+      return;
     }
-  });
+    if (chapter.id === "chapter1" && !scene?.currentNodeId) await playOneShot(DOM.scene1Impact, 1);
+    const start = chapter.id === "chapter2" ? startScene2 : startScene1;
+    const controller = start(playerState, {
+      beforeRender: ({ node }) => switchScene1MusicZone(getScene1MusicZoneFromNode(node)),
+      onChapterEnd: showChapterMap,
+      onError: reportGameError,
+      onStateChange: checkpoint
+    });
+    // The scene starts asynchronously; navigation can cancel it immediately.
+    controller.ready.catch(reportGameError);
+  } catch (error) {
+    reportGameError(error);
+  } finally {
+    launching = false;
+  }
+}
+
+function reportGameError(error) {
+  console.error("Lecture du chapitre interrompue :", error);
+  stopChapter();
+  DOM.fade?.classList.remove("on");
+  setSaveStatus("Lecture interrompue. Reviens à l’accueil pour reprendre.");
 }
 
 async function leaveGameToGate() {
+  launchGeneration++;
+  launching = false;
+  stopChapter();
+  stopChapterMap();
   stopScene1Audios();
   currentSceneMusicZone = "none";
-
+  checkpoint();
   disableMenuBackground();
-  setLoginMessage("");
-  setSignupMessage("");
-
   await transitionTo("gate");
 }
 
@@ -743,26 +815,8 @@ async function closeNovelReader() {
 }
 
 function resetGameStateForNewGame() {
-  gameState.scene1 = {
-    currentNodeId: null,
-    visitedNodes: [],
-    visitedSet: {},
-    flags: {},
-    ended: false
-  };
-
-  playerState.proudReason = null;
-  playerState.beliefHelped = null;
-
-  playerState.selfControl = 0;
-  playerState.familyAnchor = 0;
-  playerState.dutyAnchor = 0;
-  playerState.politicalLucidity = 0;
-  playerState.tendernessToAngela = 0;
-  playerState.traumaLoad = 0;
-  playerState.stress = 0;
-
-  ensureBonusState();
+  resetPlayerState({ keepBonus: true });
+  checkpoint();
 }
 
 let lastScreenBeforeSupport = "menu";
@@ -787,7 +841,11 @@ function closeSupportPage() {
 if (DOM.btnGuest) {
   DOM.btnGuest.addEventListener("click", async () => {
     await tryUnlock();
+    await saveQueue.reset();
+    startGuestSession();
     pendingMode = "guest";
+    cloudReady = false;
+    setSaveStatus("Invité : progression conservée dans cet onglet.");
     await transitionTo("menu");
     await goToMenu();
   });
@@ -880,7 +938,7 @@ if (DOM.btnSubmitLogin) {
 
     try {
       setLoginMessage("Connexion...");
-      await signInWithEmail(email, password);
+      const auth = await signInWithEmail(email, password);
       const hasProfile = await ensureProfile();
 
 pendingMode = "account";
@@ -890,6 +948,7 @@ if (!hasProfile) {
   return;
 }
 
+await prepareAccountSession(auth.user.id);
 setLoginMessage("Connexion réussie.");
 await goToMenu();
     } catch (error) {
@@ -1010,24 +1069,35 @@ if (DOM.btnChapterEndMenu) {
 if (DOM.btnNewGame) {
   DOM.btnNewGame.addEventListener("click", async () => {
     const confirmed = window.confirm(
-      "Recommencer effacera ta progression actuelle du chapitre 1. Continuer ?"
+      "Recommencer effacera ta progression des deux chapitres. Le roman déjà débloqué restera disponible. Continuer ?"
     );
 
     if (!confirmed) return;
 
+    await saveQueue.reset();
+    stopChapter();
+    stopChapterMap();
     resetGameStateForNewGame();
-
-    if (pendingMode === "account") {
-      try {
-        await saveGame("new_game", playerState);
-      } catch (error) {
-        console.warn("Impossible d’écraser la sauvegarde :", error);
-      }
-    }
+    await saveQueue.flush();
 
     await launchScene1();
   });
 }
+
+if (DOM.btnStartChapter2) {
+  DOM.btnStartChapter2.addEventListener("click", async () => {
+    if (!playerState.scene1?.ended || launching) return;
+    playerState.currentChapter = "chapter2";
+    playerState.phase = "story";
+    checkpoint();
+    await launchScene1();
+  });
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) void saveQueue.flush();
+});
+window.addEventListener("pagehide", () => { void saveQueue.flush(); });
 
 if (DOM.btnSupport) {
   DOM.btnSupport.addEventListener("click", () => {

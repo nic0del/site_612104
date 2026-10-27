@@ -1,0 +1,157 @@
+{
+  "c2_intro": {
+    "label": "Le lendemain",
+    "plannedImage": "./assets/image_fond/black_soft.png",
+    "temporaryImage": "./assets/image_fond/scene1/black_soft.png"
+  },
+  "c2_governor_resigns": {
+    "label": "Démission du gouverneur",
+    "plannedImage": "./assets/image_fond/c2_governor_resigns.png",
+    "temporaryImage": "./assets/image_fond/scene1/ch1_t2_governor.png"
+  },
+  "c2_vornic_elected": {
+    "label": "Vornic",
+    "plannedImage": "./assets/image_fond/c2_vornic_tv.png",
+    "temporaryImage": "./assets/image_fond/scene1/ligue_rise.png"
+  },
+  "c2_full_powers": {
+    "label": "Les pleins pouvoirs",
+    "plannedImage": "./assets/image_fond/c2_full_powers.png",
+    "temporaryImage": "./assets/image_fond/scene1/ligue_election.png"
+  },
+  "c2_stay_or_leave": {
+    "label": "Rester ou partir",
+    "plannedImage": "./assets/image_fond/c2_home_reflection.png",
+    "temporaryImage": "./assets/image_fond/scene1/home_evening.png"
+  },
+  "c2_daily_life": {
+    "label": "La vie continue",
+    "plannedImage": "./assets/image_fond/c2_daily_life.png",
+    "temporaryImage": "./assets/image_fond/scene1/ch1_h1_home.png"
+  },
+  "c2_night_shift_reflection": {
+    "label": "Les gardes de nuit",
+    "plannedImage": "./assets/image_fond/c2_night_shift.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_adoption_memory_intro": {
+    "label": "Le souvenir de l’adoption",
+    "plannedImage": "./assets/image_fond/c2_adoption_intro.png",
+    "temporaryImage": "./assets/image_fond/scene1/home_evening.png"
+  },
+  "c2_courtroom": {
+    "label": "Au tribunal",
+    "plannedImage": "./assets/image_fond/c2_courtroom.png",
+    "temporaryImage": "./assets/image_fond/scene1/home_evening.png"
+  },
+  "c2_angela_becomes_mother": {
+    "label": "Angela devient leur mère",
+    "plannedImage": "./assets/image_fond/c2_angela_mother.png",
+    "temporaryImage": "./assets/image_fond/scene1/kitchen_back_kiss.png"
+  },
+  "c2_autumn_walk": {
+    "label": "Promenade d’automne",
+    "plannedImage": "./assets/image_fond/c2_autumn_walk.png",
+    "temporaryImage": "./assets/image_fond/scene1/home_evening.png"
+  },
+  "c2_restaurant_plan": {
+    "label": "Fêter la famille",
+    "plannedImage": "./assets/image_fond/c2_restaurant_plan.png",
+    "temporaryImage": "./assets/image_fond/scene1/home_evening.png"
+  },
+  "c2_gunshot_memory_intro": {
+    "label": "La peur d’Angela",
+    "plannedImage": "./assets/image_fond/c2_gunshot_intro.png",
+    "temporaryImage": "./assets/image_fond/scene1/memory_fragments_2.png"
+  },
+  "c2_drunk_man_scene": {
+    "label": "L’intervention",
+    "plannedImage": "./assets/image_fond/c2_drunk_man_scene.png",
+    "temporaryImage": "./assets/image_fond/scene1/memory_fragments_2.png"
+  },
+  "c2_shot": {
+    "label": "Le coup de feu",
+    "plannedImage": "./assets/image_fond/c2_shot.png",
+    "temporaryImage": "./assets/image_fond/scene1/fire_silhouette.png"
+  },
+  "c2_hospital_angela": {
+    "label": "À l’hôpital",
+    "plannedImage": "./assets/image_fond/c2_hospital_angela.png",
+    "temporaryImage": "./assets/image_fond/scene1/ch1_f2_talk.png"
+  },
+  "c2_siren": {
+    "label": "La sirène",
+    "plannedImage": "./assets/image_fond/c2_siren.png",
+    "temporaryImage": "./assets/image_fond/scene1/street_tensions.png"
+  },
+  "c2_goodbye_family": {
+    "label": "Les adieux",
+    "plannedImage": "./assets/image_fond/c2_goodbye_family.png",
+    "temporaryImage": "./assets/image_fond/scene1/kitchen_back_kiss.png"
+  },
+  "c2_run_to_barracks": {
+    "label": "Vers la caserne",
+    "plannedImage": "./assets/image_fond/c2_run_to_barracks.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_barracks_arrival": {
+    "label": "C’est la guerre",
+    "plannedImage": "./assets/image_fond/c2_barracks_arrival.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_war_declared": {
+    "label": "La dépêche",
+    "plannedImage": "./assets/image_fond/c2_war_declared.png",
+    "temporaryImage": "./assets/image_fond/scene1/ch1_t1_tv_alert.png"
+  },
+  "c2_mobilisation": {
+    "label": "La mobilisation",
+    "plannedImage": "./assets/image_fond/c2_mobilisation.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_gear_check": {
+    "label": "Le matériel et la photo",
+    "plannedImage": "./assets/image_fond/c2_gear_check.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_failed_call_home": {
+    "label": "Un appel impossible",
+    "plannedImage": "./assets/image_fond/c2_failed_call_home.png",
+    "temporaryImage": "./assets/image_fond/scene1/ch1_f1_kitchen.png"
+  },
+  "c2_waiting": {
+    "label": "L’attente",
+    "plannedImage": "./assets/image_fond/c2_waiting.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_cigarette_outside": {
+    "label": "Sur la murette",
+    "plannedImage": "./assets/image_fond/c2_cigarette_outside.png",
+    "temporaryImage": "./assets/image_fond/scene1/street_tensions.png"
+  },
+  "c2_planes": {
+    "label": "Les avions",
+    "plannedImage": "./assets/image_fond/c2_planes.png",
+    "temporaryImage": "./assets/image_fond/scene1/ch1_t3_escalation.png"
+  },
+  "c2_explosions": {
+    "label": "Les explosions",
+    "plannedImage": "./assets/image_fond/c2_explosions.png",
+    "temporaryImage": "./assets/image_fond/scene1/street_tensions.png"
+  },
+  "c2_radio_order": {
+    "label": "L’ordre de départ",
+    "plannedImage": "./assets/image_fond/c2_radio_order.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_assignment": {
+    "label": "Vers le fourgon",
+    "plannedImage": "./assets/image_fond/c2_assignment.png",
+    "temporaryImage": "./assets/image_fond/scene1/locker_room.png"
+  },
+  "c2_end_placeholder": {
+    "label": "Fin du chapitre 2",
+    "plannedImage": "./assets/image_fond/black_soft.png",
+    "temporaryImage": "./assets/image_fond/scene1/black_soft.png"
+  }
+}

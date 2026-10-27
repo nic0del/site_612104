@@ -1,6 +1,5 @@
-import { showScreen } from "../router.js";
-import { playerState, savePlayerState } from "../state.js";
-import { createSceneEngine } from "./engine.js";
+import { playerState } from "../state.js";
+import { startChapter, getSceneState } from "./chapterRunner.js";
 
 const PLAYER_STATE_NUMERIC_KEYS = [
   "selfControl",
@@ -14,51 +13,6 @@ const PLAYER_STATE_NUMERIC_KEYS = [
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
-}
-
-function ensurePlayerStateShape() {
-  if (typeof playerState.proudReason === "undefined") {
-    playerState.proudReason = null;
-  }
-
-  if (typeof playerState.beliefHelped === "undefined") {
-    playerState.beliefHelped = null;
-  }
-
-  for (const key of PLAYER_STATE_NUMERIC_KEYS) {
-    if (typeof playerState[key] !== "number") {
-      playerState[key] = 0;
-    }
-  }
-}
-
-function ensureSceneState(state) {
-  if (!state.scene1) {
-    state.scene1 = {
-      currentNodeId: null,
-      visitedNodes: [],
-      visitedSet: {},
-      flags: {},
-      ended: false
-    };
-  }
-
-  const scene = state.scene1;
-  scene.visitedNodes ||= [];
-  scene.visitedSet ||= {};
-  scene.flags ||= {};
-  scene.ended ||= false;
-
-  ensurePlayerStateShape();
-
-  return scene;
-}
-
-function visitNode(scene, nodeId) {
-  if (!scene.visitedSet[nodeId]) {
-    scene.visitedSet[nodeId] = true;
-    scene.visitedNodes.push(nodeId);
-  }
 }
 
 function setFlag(scene, key, value = true) {
@@ -104,68 +58,6 @@ function getScene1MikaStateText() {
 
   return `${controlText} ${familyText} ${politicsText}`;
 }
-
-const chapterCard = document.getElementById("chapterCard");
-const scene1Image = document.getElementById("scene1Image");
-const choicePanel = document.getElementById("choicePanel");
-const choiceTitle = document.getElementById("choiceTitle");
-const choiceList = document.getElementById("choiceList");
-const textContainer = document.getElementById("text-container");
-const fade = document.getElementById("fade");
-
-let currentGoToNode = null;
-let currentScene = null;
-let currentChapterEndHandler = null;
-
-function handleChoice(choiceId) {
-  const choiceMap = engine.getChoiceMap();
-  const payload = choiceMap.get(choiceId);
-
-  if (!payload) return;
-
-  if (payload.type === "choice") {
-    applyChoiceEffects(currentScene, payload.choice);
-    currentGoToNode(payload.choice.next);
-    return;
-  }
-
-  if (payload.type === "next") {
-    currentGoToNode(payload.nextNodeId);
-    return;
-  }
-
-  if (payload.type === "end") {
-    currentScene.ended = true;
-    currentChapterEndHandler({
-      chapterId: chapter1Map.id,
-      scene: currentScene,
-      map: chapter1Map
-    });
-  }
-}
-
-const engine = createSceneEngine({
-  chapterCard,
-  sceneImage: scene1Image,
-  choicePanel,
-  choiceTitle,
-  choiceList,
-  textContainer,
-  fade,
-  onChoice: handleChoice
-});
-
-const {
-  clearTimers,
-  wait,
-  typeText,
-  transitionToImage,
-  clearChoices,
-  hideChoices,
-  showChoices,
-  showPanelOnly,
-  setChoiceMap
-} = engine;
 
 export const chapter1Map = {
   id: "chapter1",
@@ -1211,7 +1103,7 @@ ch1_end_election:{
   kind: "end",
   x: 2980,
   y: 300,
-  image: "./assets/image_fond/black_soft.png",
+  image: "./assets/image_fond/scene1/black_soft.png",
   transition: "fade",
 
   text: [
@@ -1220,13 +1112,6 @@ ch1_end_election:{
 },
   },
 };
-
-function resolveText(node, scene) {
-  const raw = typeof node.text === "function" ? node.text(scene) : node.text;
-  if (Array.isArray(raw)) return raw;
-  if (typeof raw === "string") return [raw];
-  return [];
-}
 
 function applyOnEnter(node, scene) {
   if (!node?.onEnter) return;
@@ -1263,268 +1148,21 @@ function applyChoiceEffects(scene, choice) {
     }
   }
 
-  savePlayerState();
+
 }
 
-function getNode(nodeId) {
-  return chapter1Map.nodes[nodeId] || null;
-}
 
-function getNextNodeId(scene, node) {
-  if (!node) return null;
-  if (typeof node.getNext === "function") return node.getNext(scene);
-  if (node.next) return node.next;
-  return null;
-}
-
-function normalizeRendererDeps(deps = {}) {
-  const noop = () => {};
-
-  return {
-    mount: deps.mount || document.getElementById("app") || document.body,
-    onChapterEnd: deps.onChapterEnd || noop,
-    onStateChange: deps.onStateChange || noop,
-    beforeRender: deps.beforeRender || noop,
-    afterRender: deps.afterRender || noop,
-  };
-}
-
-function applyScene1VisualFx(fxName) {
-  if (!scene1Image) return;
-
-  scene1Image.classList.remove(
-    "fx-rubble",
-    "fx-homeWarm",
-    "fx-tvBlue",
-    "fx-streetCold",
-    "fx-ligueRed",
-    "fx-firehouseCold"
-  );
-
-  if (!fxName) return;
-
-  const allowedFx = [
-    "rubble",
-    "homeWarm",
-    "tvBlue",
-    "streetCold",
-    "ligueRed",
-    "firehouseCold"
-  ];
-
-  if (allowedFx.includes(fxName)) {
-    scene1Image.classList.add(`fx-${fxName}`);
-  }
-}
-
-async function renderNode(node, scene, deps, goToNode) {
-  const { beforeRender, afterRender } = deps;
-
-  currentGoToNode = goToNode;
-  currentScene = scene;
-  currentChapterEndHandler = deps.onChapterEnd;
-
-  clearTimers();
-  hideChoices();
-  showPanelOnly("");
-
-  beforeRender({ node, scene });
-  if (node.transition === "fade" && node.image) {
-  await engine.transitionToImage(node.image, 900);
-} else if (node.image && scene1Image) {
-  scene1Image.style.backgroundImage = `url("${node.image}")`;
-  scene1Image.classList.add("is-visible");
-}
-
-  applyScene1VisualFx(node.visualFx || "");
-
-  const lines = resolveText(node, scene);
-  await typeText(lines, {
-    speed: 32,
-    lineGapMs: 360,
-    clearFirst: true
+export function startScene1(state = playerState, deps = {}) {
+  return startChapter(chapter1Map, state, "scene1", deps, {
+    onEnter: applyOnEnter,
+    onChoice: applyChoiceEffects
   });
-
-  if (node.kind === "choice" && Array.isArray(node.choices)) {
-    const uiChoices = node.choices.map((choice) => ({
-      id: choice.id,
-      label: choice.label
-    }));
-
-    showChoices("", uiChoices, {
-      initialDelayMs: 250,
-      staggerMs: 120
-    });
-
-    setChoiceMap(
-      new Map(
-        node.choices.map((choice) => [
-          choice.id,
-          { type: "choice", choice }
-        ])
-      )
-    );
-  } else if (node.kind === "end") {
-    showChoices("", [
-  { id: "end_scene1", label: "Afficher la carte du chapitre" }
-]);
-
-    setChoiceMap(
-      new Map([
-        ["end_scene1", { type: "end" }]
-      ])
-    );
-  } else {
-    const nextNodeId = getNextNodeId(scene, node);
-
-    showChoices("", [
-      {
-        id: "next_scene1",
-        label: nextNodeId ? "Continuer" : "Finir"
-      }
-    ]);
-
-    if (nextNodeId) {
-      setChoiceMap(
-        new Map([
-          ["next_scene1", { type: "next", nextNodeId }]
-        ])
-      );
-    } else {
-      setChoiceMap(
-        new Map([
-          ["next_scene1", { type: "end" }]
-        ])
-      );
-    }
-  }
-
-  afterRender({ node, scene });
 }
-
-export function getChapter1Progress(state = {}) {
-  const scene = ensureSceneState(state);
-
-  return {
-    chapterId: chapter1Map.id,
-    title: chapter1Map.title,
-    currentNodeId: scene.currentNodeId,
-    visitedNodes: [...scene.visitedNodes],
-    visitedSet: { ...scene.visitedSet },
-    flags: { ...scene.flags },
-    playerState: { ...playerState },
-    ended: scene.ended
-  };
+export function getChapter1MapData() { return chapter1Map; }
+export function getChapter1Progress(state = playerState) {
+  return { chapterId: chapter1Map.id, ...getSceneState(state, "scene1") };
 }
-
-export function getChapter1MapData() {
-  return chapter1Map;
+export function resetScene1(state = playerState) {
+  state.scene1 = null;
+  return getSceneState(state, "scene1");
 }
-
-export function resetScene1(state = {}) {
-  state.scene1 = {
-    currentNodeId: null,
-    visitedNodes: [],
-    visitedSet: {},
-    flags: {},
-    ended: false
-  };
-  return state.scene1;
-}
-
-async function playScene1Intro() {
-  clearTimers();
-  hideChoices();
-
-  if (textContainer) {
-    textContainer.innerHTML = "";
-    textContainer.style.opacity = "0";
-  }
-
-  if (choicePanel) {
-    choicePanel.classList.remove("on");
-  }
-
-  if (scene1Image) {
-    scene1Image.style.backgroundImage = 'url("./assets/image_fond/black_soft.png")';
-    scene1Image.classList.add("is-visible");
-  }
-
-  if (chapterCard) {
-    chapterCard.textContent = chapter1Map.title;
-
-    // reset propre avant affichage
-    chapterCard.classList.remove("is-hiding");
-    chapterCard.classList.remove("is-visible");
-
-    // force le navigateur à prendre l'état initial
-    void chapterCard.offsetWidth;
-
-    // affichage du carton
-    chapterCard.classList.add("is-visible");
-  }
-
-  // temps d'affichage du carton
-  await wait(1800);
-
-  if (chapterCard) {
-    // disparition lente
-    chapterCard.classList.add("is-hiding");
-    chapterCard.classList.remove("is-visible");
-  }
-
-  await wait(1400);
-
-  if (chapterCard) {
-    // nettoyage pour les prochains lancements
-    chapterCard.classList.remove("is-hiding");
-  }
-
-  if (textContainer) {
-    textContainer.style.opacity = "1";
-  }
-}
-
-export async function startScene1(state = {}, deps = {}) {
-  const scene = ensureSceneState(state);
-  const rendererDeps = normalizeRendererDeps(deps);
-
-  showScreen("scene1");
-
-  const isFirstLaunch = !scene.currentNodeId;
-
-  if (isFirstLaunch) {
-    await playScene1Intro();
-  } else {
-    if (scene1Image) {
-      scene1Image.classList.add("is-visible");
-    }
-    if (textContainer) {
-      textContainer.style.opacity = "1";
-    }
-  }
-
-  async function goToNode(nodeId) {
-    const node = getNode(nodeId);
-    if (!node) {
-      throw new Error(`[scene1] Node introuvable: ${nodeId}`);
-    }
-
-    scene.currentNodeId = nodeId;
-    visitNode(scene, nodeId);
-    applyOnEnter(node, scene);
-    rendererDeps.onStateChange(getChapter1Progress(state));
-    await renderNode(node, scene, rendererDeps, goToNode);
-  }
-
-  const entryNodeId = scene.currentNodeId || chapter1Map.start;
-  await goToNode(entryNodeId);
-
-  return {
-    goToNode,
-    getProgress: () => getChapter1Progress(state),
-    getMap: () => chapter1Map,
-    reset: () => resetScene1(state)
-  };
-}
-
