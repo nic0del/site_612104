@@ -7,8 +7,8 @@ import {
   isMuted,
   getTargetVolume,
   pauseOnHidden
-} from "./audio.js";
-import { startScene1 } from "./scenes/scene1.js";
+} from "./audio.js?v=62808d0";
+import { startScene1 } from "./scenes/scene1.js?v=62808d0";
 const gameState = {};
 import { startGuestSession, startAccountSession, playerState } from "./state.js";
 import { supabase } from "./supabase.js";
