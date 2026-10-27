@@ -1,6 +1,12 @@
 import { playerState } from "../state.js";
 import { startChapter } from "./chapterRunner.js";
 
+function getChoiceEcho(scene, nodeId, variants, fallback = "") {
+  const previous = (scene?.choiceHistory || []).slice().reverse()
+    .find(choice => choice?.nodeId === nodeId);
+  return variants[previous?.choiceId] || fallback;
+}
+
 function getProudReasonText() {
   if (playerState.proudReason === "save") {
     return "Au fond, j'ai toujours voulu croire que sauver quelqu'un suffisait encore à donner un sens à tout le reste.";
@@ -392,7 +398,7 @@ c2_autumn_walk: {
   choices: [
     { id: "c2_walk_enjoy", label: "Profiter de l'instant.", next: "c2_restaurant_plan" },
     { id: "c2_walk_children", label: "Regarder les enfants.", next: "c2_restaurant_plan" },
-    { id: "c2_walk_fragile", label: "Sentir, sans savoir pourquoi, que cela ne durerait pas.", next: "c2_restaurant_plan" }
+    { id: "c2_walk_fragile", label: "Essayer de retenir chaque détail de cette matinée.", next: "c2_restaurant_plan" }
   ]
 },
 
@@ -404,16 +410,16 @@ c2_restaurant_plan: {
   image: "./assets/image_fond/scene1/home_evening.png",
   transition: "fade",
   text:
-    "On allait simplement fêter ça. " +
-    "Notre famille. " +
-    "Cette nouvelle vie.\n\n" +
-    "Quelque chose de simple. " +
-    "Quelque chose de normal.\n\n" +
-    "C'est peut-être pour ça que ce souvenir me revient avec une telle violence. " +
-    "Parce qu'il contenait encore tout. " +
-    "Avant que le reste n'arrive.",
+    (scene) =>
+    "On allait simplement fêter ça. Notre famille. Cette nouvelle vie.\n\n" +
+    "Quelque chose de simple. Quelque chose de normal.\n\n" +
+    getChoiceEcho(scene, "c2_autumn_walk", {
+      c2_walk_enjoy: "Je me laissais gagner par leur bonne humeur.",
+      c2_walk_children: "Je regardais les enfants discuter de ce qu'ils allaient commander.",
+      c2_walk_fragile: "Je voulais garder en mémoire les feuilles, la lumière et leurs voix."
+    }, "Ce jour-là, nous avions toutes les raisons d'être heureux."),
   choices: [
-    { id: "c2_to_gunshot_memory", label: "Et pourtant Angela avait déjà eu peur de me perdre.", next: "c2_gunshot_memory_intro" }
+    { id: "c2_to_gunshot_memory", label: "Repenser à ce qu'Angela avait déjà traversé avec moi.", next: "c2_gunshot_memory_intro" }
   ]
 },
 
@@ -426,7 +432,7 @@ c2_gunshot_memory_intro: {
   image: "./assets/image_fond/scene1/memory_fragments_2.png",
   transition: "fade",
   text:
-    "Nana se faisait toujours du mauvais sang quand je partais en intervention.\n\n" +
+    "Bien avant cette matinée au tribunal, Nana avait déjà eu peur de me perdre en intervention.\n\n" +
     "Elle ne m'avait pas connu avant que je sois pompier. " +
     "Et les alertes avaient toujours rythmé notre vie.\n\n" +
     "Il était arrivé par deux fois qu'elle reçoive un appel de mon chef de garde pour lui annoncer que j'avais eu un problème. " +
@@ -510,9 +516,8 @@ c2_hospital_angela: {
     "J'ai eu droit à un immense baiser. " +
     "À une déclaration d'amour comme jamais elle ne m'en avait faite. " +
     "Et à une gifle à m'en décrocher la mâchoire.\n\n" +
-    "Je pense que c'était de cela qu'elle avait peur. " +
-    "Que cette fois, " +
-    "je n'aie pas autant de chance.",
+    "Ce jour-là, à l'hôpital, j'avais compris à quel point elle avait eu peur. " +
+    "Bien après ma sortie, chacun de mes départs continuerait de l'inquiéter.",
   choiceReveal: { initialDelayMs: 500, staggerMs: 300 },
   choices: [
     { id: "c2_hospital_love", label: "Retenir son amour.", next: "c2_siren" },
@@ -529,7 +534,9 @@ c2_siren: {
   image: "./assets/image_fond/scene1/street_tensions.png",
   transition: "fade",
   text:
-  () => "Un bruit long et persistant a retenti dans toutes les rues de la ville.\n\n" +
+  () => "Le souvenir de l'hôpital s'efface. Je retrouve cette matinée d'automne : " +
+  "Angela, les enfants, le chemin du restaurant. Nous allions fêter l'adoption.\n\n" +
+  "Un bruit long et persistant a retenti dans toutes les rues de la ville.\n\n" +
   "La sirène d'alerte générale.\n\n" +
   "C'était la première fois que je l'entendais autrement que pour un essai. " +
   "Quelque chose de grave venait de se produire.\n\n" +
@@ -620,7 +627,7 @@ c2_barracks_arrival: {
     getProudReasonText() ,
   choiceReveal: { initialDelayMs: 450, staggerMs: 260 },
   choices: () => [
-  { id: "c2_barracks_expression", label: "Croire un instant à une simple expression.", next: "c2_war_declared" },
+  { id: "c2_barracks_expression", label: "Me raccrocher un instant au sens habituel de cette expression.", next: "c2_war_declared" },
   { id: "c2_barracks_understand", label: "Comprendre immédiatement.", next: "c2_war_declared" },
   { id: "c2_barracks_absorb", label: "Encaisser sans commenter.", next: "c2_war_declared" },
   {
@@ -755,7 +762,7 @@ c2_waiting: {
   getMikaInnerColor(),
   choiceReveal: { initialDelayMs: 500, staggerMs: 300 },
   choices: () => [
-  { id: "c2_wait_inside", label: "Rester là, à attendre.", next: "c2_cigarette_outside" },
+  { id: "c2_wait_inside", label: "Attendre encore un peu avant de sortir.", next: "c2_cigarette_outside" },
   { id: "c2_wait_smoke", label: "Sortir fumer sur la murette.", next: "c2_cigarette_outside" },
   { id: "c2_wait_family", label: "Ressasser la journée avec eux.", next: "c2_cigarette_outside" },
   ...(getStressReactionChoice() ? [getStressReactionChoice()] : [])
@@ -770,13 +777,16 @@ c2_cigarette_outside: {
   image: "./assets/image_fond/scene1/street_tensions.png",
   transition: "fade",
   text:
-    "J'étais assis sur la murette, " +
-    "une cigarette entre les doigts.\n\n" +
-    "Nana détestait que je fume. " +
-    "Elle le sentait toujours sur mes vêtements. " +
-    "Alors j'avais réduit.\n\n" +
-    "Je regardais les gens passer dans la rue. " +
-    "Je rêvassais. " +
+    (scene) =>
+    getChoiceEcho(scene, "c2_waiting", {
+      c2_wait_inside: "J'étais resté encore un moment à l'intérieur, puis j'avais fini par sortir.\n\n",
+      c2_wait_smoke: "J'étais sorti prendre cette pause que je repoussais depuis le début de l'alerte.\n\n",
+      c2_wait_family: "À force de repenser à cette matinée avec eux, je n'arrivais plus à suivre les conversations. J'avais fini par sortir.\n\n",
+      c2_wait_crack: "L'attente devenait trop lourde. J'étais sorti pour reprendre un peu d'air.\n\n"
+    }) +
+    "J'étais assis sur la murette, une cigarette entre les doigts.\n\n" +
+    "Nana détestait que je fume. Elle le sentait toujours sur mes vêtements. Alors j'avais réduit.\n\n" +
+    "Je regardais les gens passer dans la rue. Je rêvassais. " +
     "Comme si la journée pouvait encore reprendre un cours normal.",
   choiceReveal: { initialDelayMs: 450, staggerMs: 260 },
   choices: [
@@ -798,9 +808,9 @@ c2_planes: {
     "J'ai levé les yeux. " +
     "J'ai entrevu deux avions.",
   choices: [
-    { id: "c2_planes_look", label: "Lever les yeux.", next: "c2_explosions" },
+    { id: "c2_planes_look", label: "Suivre les avions du regard.", next: "c2_explosions" },
     { id: "c2_planes_freeze", label: "Rester figé une seconde.", next: "c2_explosions" },
-    { id: "c2_planes_late", label: "Comprendre trop tard.", next: "c2_explosions" }
+    { id: "c2_planes_late", label: "Chercher à comprendre ce qui se passait.", next: "c2_explosions" }
   ]
 },
 
