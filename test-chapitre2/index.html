@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>612104 — Version de test</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="./css/main.css?v=preview-c2-v1">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+</head>
+
+<body>
+  <!-- Background (for menu), hidden on gate -->
+  <div class="bg" id="bg"></div>
+  <div class="vignette" id="vignette"></div>
+
+  <!-- Music (menu) -->
+  <audio id="music" loop preload="auto">
+    <source src="./assets/audio/zec53-emotional-melancholic-inspirational-sincere-piano-and-strings-321684.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Fade overlay -->
+  <div id="fade" class="fade"></div>
+
+  <!-- SCREEN 1: Gate -->
+  <section class="screen gate active" id="screen-gate">
+    <div class="gateBox">
+      <h1 class="title">612104 · Test</h1>
+      <p>Version de test : ta progression ici est distincte de ta partie habituelle.</p>
+
+      <p class="disclaimer">
+        Avertissement : cette œuvre contient des thèmes pouvant heurter des personnes sensibles
+        (enfermement, détresse, catastrophes, charge émotionnelle).
+        Si tu ne te sens pas prêt·e, reviens plus tard.
+      </p>
+
+      <div class="btnRow">
+       <button id="btnGuest">▶ Jouer en tant qu’invité</button>
+       <button id="btnLogin">🔒 Se connecter</button>
+       <button id="btnGoSignup">🆕 Créer un profil</button>
+      </div>
+
+      <div class="metaLine" id="audioHint">
+        Le son démarrera après ton premier clic.
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: Login -->
+  <section class="screen login" id="screen-login">
+    <div class="loginBox">
+      <h2>Connexion</h2>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" placeholder="ex: nico@exemple.fr" />
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+
+      <div class="inlineRow">
+       <button id="btnSubmitLogin">Se connecter</button>
+       <button id="btnForgotPassword">Mot de passe oublié</button>
+       <button id="btnBackToGate">Retour</button>
+     </div>
+
+      <div class="metaLine" id="loginMsg"></div>
+    </div>
+  </section>
+
+<!-- SCREEN 3: Signup -->
+<section class="screen signup" id="screen-signup">
+  <div class="loginBox">
+    <h2>Créer un profil</h2>
+
+    <div class="field">
+      <label for="signupUsername">Pseudo</label>
+      <input id="signupUsername" type="text" placeholder="Ton pseudo" />
+    </div>
+
+    <div class="field">
+      <label for="signupEmail">Email</label>
+      <input id="signupEmail" type="email" placeholder="ex: nico@exemple.fr" />
+    </div>
+
+    <div class="field">
+      <label for="signupPassword">Mot de passe</label>
+      <input id="signupPassword" type="password" placeholder="••••••••" />
+    </div>
+
+    <div class="inlineRow">
+      <button id="btnSubmitSignup">Créer le profil</button>
+      <button id="btnBackToLogin">Retour</button>
+    </div>
+
+    <div class="metaLine" id="signupMsg"></div>
+  </div>
+</section>
+
+  <!-- SCREEN 3: Menu -->
+  <section class="screen menu" id="screen-menu">
+    <div class="menuPanel">
+      <p id="welcomeUser" class="menuSub"></p>
+      <p class="menuSub">
+        Une expérience narrative interactive. Fais des choix. Porte-en le poids.
+      </p>
+
+      <div class="menuBtns">
+  <button id="btnStart">▶ Continuer</button>
+  <button id="btnNewGame">↻ Nouvelle partie</button>
+  <button id="btnOptions">⚙ Options</button>
+  <button id="btnFullscreen">⛶ Plein écran</button>
+  <button id="btnSupport">♡ Soutenir le projet</button>
+  <button id="btnQuit">⏻ Quitter</button>
+</div>
+
+<div class="bonusPanel" id="bonusPanel">
+  <h3>Bonus</h3>
+
+  <button id="btnBonusChapter1" class="bonusBtn locked">
+    🔒 Chapitre 1 du roman
+  </button>
+</div>
+
+      <div class="tiny">
+        <button id="btnSound" class="tinyBtn">Son : …</button>
+        <span>v0.1</span>
+      </div>
+      <p class="metaLine" id="menuSaveStatus" role="status"></p>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: Scene 1 -->
+  <section class="screen scene1" id="screen-scene1">
+  <div class="chapterCard" id="chapterCard">Chapitre 1 - L'origine</div>
+  <div class="sceneImage" id="scene1Image"></div>
+
+  <div class="sceneTopBar" id="sceneTopBar">
+  <div class="sceneIdentity">
+    <div class="scenePlayer" id="scenePlayerName">Bienvenue</div>
+    <div class="saveStatus" id="saveStatus" role="status"></div>
+    <div class="saveStatus hidden" id="chapterWorkNote">Chapitre 2 — visuels provisoires</div>
+  </div>
+
+  <div class="sceneTopActions">
+    <button id="btnGameFullscreen" class="sceneTopBtn">⛶ Plein écran</button>
+    <button id="btnGameHome" class="sceneTopBtn">⌂ Accueil</button>
+  </div>
+</div>
+
+  <div class="choicePanel" id="choicePanel">
+    <div id="text-container"></div>
+    <div class="choiceTitle" id="choiceTitle">Que fais-tu ?</div>
+    <div class="choiceList" id="choiceList"></div>
+  </div>
+</section>
+
+<section class="screen chapter-map" id="screen-chapter-map">
+  <div class="chapterMapWrap">
+    <div class="chapterMapHeader">
+      <h2 id="chapterMapTitle">Fin du chapitre</h2>
+      <p id="chapterMapSubtitle">Chemin parcouru</p>
+    </div>
+
+    <div class="chapterMapViewport" id="chapterMapViewport">
+  <div class="chapterMapStage" id="chapterMapStage">
+    <svg id="chapterMapSvg" class="chapterMapSvg"></svg>
+    <div id="chapterMapNodes" class="chapterMapNodes"></div>
+  </div>
+</div>
+
+    <div class="chapterMapFooter">
+  <div class="chapterMapNav">
+    <button id="btnMapLeft" class="mapNavBtn">← Reculer</button>
+    <button id="btnMapRight" class="mapNavBtn">Avancer →</button>
+  </div>
+
+  <button id="btnMapContinue">Continuer</button>
+</div>
+
+  </div>
+</section>
+
+<!-- SCREEN: Chapter end -->
+<section class="screen chapter-end" id="screen-chapter-end">
+  <div class="chapterEndBox">
+    <h2 id="chapterEndTitle">Chapitre 1 terminé</h2>
+
+    <p id="chapterEndSummary">
+      Tu as parcouru les premiers fragments de la mémoire de Mika.
+      Le chemin n’est pas complet, mais il laisse déjà une trace.
+    </p>
+
+    <p class="chapterEndUnlock" id="chapterEndUnlock">
+      Bonus débloqué : Chapitre 1 du roman.
+    </p>
+
+    <div class="chapterEndActions">
+      <button id="btnStartChapter2" class="hidden">Commencer le chapitre 2</button>
+      <button id="btnReadNovelChapter1">📖 Lire le chapitre 1 du roman</button>
+      <button id="btnChapterEndMenu">Retour au menu</button>
+      <button id="btnChapterEndSupport">♡ Soutenir le projet</button>
+    </div>
+  </div>
+</section>
+
+<!-- SCREEN: Novel reader -->
+<section class="screen novel-reader" id="screen-novel-reader">
+  <div class="novelReaderBox">
+    <div class="novelReaderHeader">
+      <h2 id="novelReaderTitle">Chapitre 1 — L’Origine</h2>
+      <button id="btnCloseNovel">Retour</button>
+    </div>
+
+    <div class="novelReaderText" id="novelReaderText"></div>
+  </div>
+</section>
+
+<!-- SCREEN: Support project -->
+<section class="screen support-screen" id="screen-support">
+  <div class="supportBox">
+    <h2>Soutenir 612104</h2>
+
+    <p>
+      Le projet est gratuit, sans publicité et sans financement pour le moment.
+    </p>
+
+    <p>
+      Si l’expérience t’a touché, le meilleur soutien est simple :
+      partager le jeu, en parler autour de toi, ou faire un retour après y avoir joué.
+    </p>
+
+    <div class="supportActions">
+      <button id="btnCopyGameLink">🔗 Copier le lien du jeu</button>
+      <button id="btnSupportFeedback">✉ Faire un retour</button>
+      <button id="btnSupportBack">Retour</button>
+    </div>
+
+    <p class="supportNote" id="supportCopyMsg"></p>
+  </div>
+</section>
+
+<!-- Scene 1 - intro impact / explosion -->
+<audio id="scene1Impact" preload="auto">
+  <source src="./assets/audio/scene1/impact_intro.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - rubble ambience -->
+<audio id="scene1RubbleAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/rubble_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - family branch theme -->
+<audio id="scene1FamilyTheme" loop preload="auto">
+  <source src="./assets/audio/scene1/dioneves-forgive-me-melancholic-piano-amp-strings-piece-256918.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - firehouse memory ambience -->
+<audio id="scene1FirehouseAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/firehouse_memory_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - TV / political ambience -->
+<audio id="scene1TvAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/tv_political_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - political unrest ambience -->
+<audio id="scene1PoliticalAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/political_unrest_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Chapter 1 map theme -->
+<audio id="chapter1MapTheme" loop preload="auto">
+  <source src="./assets/audio/chapter_map/danydory-whispers-in-the-void-dark-ambient-music-425048.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="novelReaderTheme" loop preload="auto">
+  <source src="./assets/audio/bonus/danydory-ambient-atmospheric-background-music_echoes-of-the-future-484633.mp3" type="audio/mpeg">
+</audio>
+
+  <!-- One version for the entire module graph: shared state stays a singleton. -->
+  <script type="importmap">
+{
+  "imports": {
+    "./js/audio.js": "./js/audio.js?v=preview-c2-v1",
+    "./js/bonusTexts.js": "./js/bonusTexts.js?v=preview-c2-v1",
+    "./js/chapterMap.js": "./js/chapterMap.js?v=preview-c2-v1",
+    "./js/previewSaves.js": "./js/previewSaves.js?v=preview-c2-v1",
+    "./js/router.js": "./js/router.js?v=preview-c2-v1",
+    "./js/saveQueue.js": "./js/saveQueue.js?v=preview-c2-v1",
+    "./js/scenes/chapterRunner.js": "./js/scenes/chapterRunner.js?v=preview-c2-v1",
+    "./js/scenes/engine.js": "./js/scenes/engine.js?v=preview-c2-v1",
+    "./js/scenes/scene1.js": "./js/scenes/scene1.js?v=preview-c2-v1",
+    "./js/scenes/scene2.js": "./js/scenes/scene2.js?v=preview-c2-v1",
+    "./js/state.js": "./js/state.js?v=preview-c2-v1",
+    "./js/supabase.js": "./js/supabase.js?v=preview-c2-v1",
+    "./js/ui.js": "./js/ui.js?v=preview-c2-v1"
+  }
+}
+  </script>
+  <!-- Main script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script type="module" src="./js/main.js?v=preview-c2-v1"></script>
+</body>
+</html>
+
+
