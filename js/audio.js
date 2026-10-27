@@ -4,6 +4,16 @@ let unlocked = false;
 let muted = false;
 let fadeTimer = null;
 let targetVol = 0.40;
+let visibilityTrackingStarted = false;
+const pausedWhenHidden = new Set();
+let screenWhenHidden = null;
+
+function applyMuteState() {
+  for (const audio of document.querySelectorAll("audio")) {
+    // Muting stays effective even when scene fades change the volume.
+    audio.muted = muted;
+  }
+}
 
 function clearFade(){
   if (fadeTimer){
@@ -51,14 +61,47 @@ export async function unlockAndStart() {
 export function toggleMute(){
   if (!unlocked) return;
   muted = !muted;
-  if (muted) fadeTo(0.0, 0.04, 50);
-  else fadeTo(targetVol, 0.02, 80);
+  applyMuteState();
 }
 
 export function pauseOnHidden(){
+  if (visibilityTrackingStarted) return;
+  visibilityTrackingStarted = true;
+  applyMuteState();
+
+  // Capture also covers a track started after the player selected mute.
+  document.addEventListener("play", (event) => {
+    if (!event.target.matches?.("audio")) return;
+    event.target.muted = muted;
+    if (document.hidden) {
+      if (!pausedWhenHidden.size) {
+        screenWhenHidden = document.querySelector(".screen.active")?.id;
+      }
+      pausedWhenHidden.add(event.target);
+      event.target.pause();
+    }
+  }, true);
+
   document.addEventListener("visibilitychange", () => {
-    if (!unlocked) return;
-    if (document.hidden) music.pause();
-    else if (!muted) music.play().catch(()=>{});
+    if (document.hidden) {
+      screenWhenHidden = document.querySelector(".screen.active")?.id;
+      for (const audio of document.querySelectorAll("audio")) {
+        if (!audio.paused && !audio.ended) {
+          pausedWhenHidden.add(audio);
+          audio.pause();
+        }
+      }
+      return;
+    }
+
+    // Resume only the tracks interrupted here, never the menu by default.
+    const sameScreen = screenWhenHidden === document.querySelector(".screen.active")?.id;
+    const tracks = [...pausedWhenHidden];
+    pausedWhenHidden.clear();
+    applyMuteState();
+    if (!sameScreen) return;
+    for (const audio of tracks) {
+      if (!audio.ended) audio.play().catch(() => {});
+    }
   });
 }
