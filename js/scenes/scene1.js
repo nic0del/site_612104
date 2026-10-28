@@ -186,13 +186,8 @@ export const chapter1Map = {
   visualFx: "rubble",
 
   text: [
-    "Il n’y a plus rien.",
-    "",
-    "Pas même la douleur, au début.",
-    "",
-    "Puis l’air revient d’un coup, lourd, brûlant, chargé de poussière.",
-    "",
-    "Et avec lui, tout le reste."
+    "Il n’y a plus rien. Pas même la douleur, au début.",
+    "Puis l’air revient d’un coup, lourd, brûlant, chargé de poussière. Et avec lui, tout le reste."
   ],
 
   next: "ch1_p1_eyes",
@@ -210,19 +205,9 @@ export const chapter1Map = {
 
   text: [
     "J’ouvre les yeux à peine.",
-    "",
-    "Lumière sale.",
-    "Béton.",
-    "Poussière.",
-    "",
-    "Rien ne répond comme il faut.",
-    "",
-    "Pendant quelques secondes, je ne comprends pas vraiment où je suis.",
-    "",
-    "Puis le corps se charge de me le rappeler.",
-    "",
+    "Lumière sale. Béton. Poussière. Rien ne répond comme il faut.",
+    "Pendant quelques secondes, je ne comprends pas vraiment où je suis. Puis le corps se charge de me le rappeler.",
     "Je suis vivant.",
-    "",
     "Mais à peine."
   ],
 
@@ -258,17 +243,8 @@ export const chapter1Map = {
 
   text: [
     "Je fais ce qu’on apprend à faire quand le corps commence à paniquer.",
-    "",
-    "Inspirer peu.",
-    "Expirer plus lentement.",
-    "",
-    "Ne pas gaspiller l’air.",
-    "Ne pas laisser la peur décider à ma place.",
-    "",
-    "C’est presque ridicule, quand on y pense.",
-    "",
-    "On peut avoir passé sa vie à intervenir pour les autres,",
-    "et se retrouver à négocier avec sa propre respiration comme avec une victime qu’il faudrait empêcher de lâcher."
+    "Inspirer peu. Expirer plus lentement. Ne pas gaspiller l’air. Ne pas laisser la peur décider à ma place.",
+    "C’est presque ridicule, quand on y pense. On peut avoir passé sa vie à intervenir pour les autres, et se retrouver à négocier avec sa propre respiration comme avec une victime qu’il faudrait empêcher de lâcher."
   ],
 
   next: "ch1_p2_trigger",
@@ -283,18 +259,10 @@ ch1_p1b_panic: {
   visualFx: "rubble",
 
   text: [
-    "Mon souffle s’emballe avant même que je puisse le retenir.",
-    "",
-    "Le corps ne demande pas l’autorisation.",
-    "",
-    "Il cherche de l’air.",
-    "Il cherche une issue.",
-    "Il cherche n’importe quoi.",
-    "",
+    "Mon souffle s’emballe avant même que je puisse le retenir. Le corps ne demande pas l’autorisation.",
+    "Il cherche de l’air. Il cherche une issue. Il cherche n’importe quoi.",
     "Et plus il lutte, plus il me trahit.",
-    "",
-    "Je le sens très clairement :",
-    "si je le laisse faire, il me tuera avant les gravats."
+    "Je le sens très clairement : si je le laisse faire, il me tuera avant les gravats."
   ],
 
   next: "ch1_p2_trigger",
@@ -309,18 +277,10 @@ ch1_p1b_panic: {
   visualFx: "rubble",
 
   text: [
-    "J’essaie d’appeler.",
-    "",
-    "Pas fort.",
-    "Je sais très bien que je n’en ai pas les moyens.",
-    "",
+    "J’essaie d’appeler. Pas fort. Je sais très bien que je n’en ai pas les moyens.",
     "Ma voix sort mal, écrasée, étranglée par la poussière.",
-    "",
     "Aucune réponse.",
-    "",
-    "Seulement ce monde cassé qui me renvoie mon propre souffle.",
-    "",
-    "Je crois que c’est là que je comprends vraiment que je suis seul."
+    "Seulement ce monde cassé qui me renvoie mon propre souffle. Je crois que c’est là que je comprends vraiment que je suis seul."
   ],
 
   next: "ch1_p2_trigger",
@@ -337,25 +297,11 @@ ch1_p1b_panic: {
   visualFx: "rubble",
 
   text: [
-    "Je tente de me concentrer.",
-    "",
-    "Pas sur mon corps.",
-    "Surtout pas sur mon corps.",
-    "",
+    "Je tente de me concentrer. Pas sur mon corps. Surtout pas sur mon corps.",
     "Alors je fais ce que l’esprit humain fait toujours quand il est coincé quelque part et qu’il refuse d’admettre qu’il n’a plus de prise.",
-    "",
-    "Je cherche une cause.",
-    "Un début.",
-    "Un responsable.",
-    "",
-    "La situation du monde.",
-    "Mes choix.",
-    "Mes lâchetés.",
-    "",
-    "Je voudrais pouvoir accuser quelqu’un d’autre.",
-    "",
-    "Mais au fond, je crois que je sais déjà.",
-    "",
+    "Je cherche une cause. Un début. Un responsable.",
+    "La situation du monde. Mes choix. Mes lâchetés.",
+    "Je voudrais pouvoir accuser quelqu’un d’autre. Mais au fond, je crois que je sais déjà.",
     "Alors je reprends depuis le départ."
   ],
 
@@ -389,21 +335,9 @@ ch1_firefighter_1: {
   visualFx: "firehouseCold",
 
   text: [
-    "Avant tout ça, j’étais pompier.",
-    "",
-    "C’est étrange de le dire comme ça.",
-    "Comme si c’était une autre vie.",
-    "",
-    "Pourtant je me revois encore devant mon vestiaire.",
-    "La veste lourde.",
-    "Les bottes.",
-    "L’odeur du cuir, de la sueur froide et du matériel qu’on remet toujours à la même place.",
-    "",
-    "J’étais fier de ce métier.",
-    "",
-    "Pas fier comme on l’est sur une photo officielle.",
-    "",
-    "Fier parce que, certains jours, j’avais vraiment l’impression d’avoir une utilité dans ce monde."
+    "Avant tout ça, j’étais pompier. C’est étrange de le dire comme ça. Comme si c’était une autre vie.",
+    "Pourtant je me revois encore devant mon vestiaire. La veste lourde. Les bottes. L’odeur du cuir, de la sueur froide et du matériel qu’on remet toujours à la même place.",
+    "J’étais fier de ce métier. Pas fier comme on l’est sur une photo officielle. Fier parce que, certains jours, j’avais vraiment l’impression d’avoir une utilité dans ce monde."
   ],
 
   next: "ch1_firefighter_2"
@@ -421,11 +355,7 @@ ch1_firefighter_2: {
 
   text: [
     "Je crois que cette fierté ne venait pas seulement du feu, des départs en urgence ou de cette adrénaline particulière qu’on finit presque par aimer.",
-    "",
-    "Elle venait d’ailleurs.",
-    "",
-    "D’un besoin plus profond.",
-    "",
+    "Elle venait d’ailleurs. D’un besoin plus profond.",
     "Mais lequel ?"
   ],
 
@@ -471,21 +401,9 @@ ch1_firefighter_3: {
   visualFx: "firehouseCold",
 
   text: [
-    "Pendant longtemps, ça m’a suffi.",
-    "",
-    "Rentrer de garde avec cette sensation simple d’avoir fait le bien.",
-    "",
-    "D’avoir diminué un peu la souffrance de quelqu’un.",
-    "D’avoir gagné quelques minutes.",
-    "Parfois une vie.",
-    "",
-    "Aujourd’hui, évidemment, je ne suis plus aussi sûr de rien.",
-    "",
-    "Quand on regarde tout depuis les décombres, même les bonnes actions finissent par prendre une couleur douteuse.",
-    "",
-    "Je me demande parfois combien de personnes j’ai vraiment sauvées.",
-    "",
-    "Et combien j’ai seulement aidées à tenir un peu plus longtemps dans un monde qui les aurait rattrapées de toute façon."
+    "Pendant longtemps, ça m’a suffi. Rentrer de garde avec cette sensation simple d’avoir fait le bien. D’avoir diminué un peu la souffrance de quelqu’un. D’avoir gagné quelques minutes. Parfois une vie.",
+    "Aujourd’hui, évidemment, je ne suis plus aussi sûr de rien. Quand on regarde tout depuis les décombres, même les bonnes actions finissent par prendre une couleur douteuse.",
+    "Je me demande parfois combien de personnes j’ai vraiment sauvées. Et combien j’ai seulement aidées à tenir un peu plus longtemps dans un monde qui les aurait rattrapées de toute façon."
   ],
 
   next: "ch1_h1_home"
@@ -502,17 +420,9 @@ ch1_firefighter_3: {
   visualFx: "homeWarm",
 
   text: [
-    "La maison est là.",
-    "",
-    "Debout.",
-    "Ordinaire.",
-    "Presque intacte dans ma mémoire.",
-    "",
+    "La maison est là. Debout. Ordinaire. Presque intacte dans ma mémoire.",
     "C’est étrange comme certains souvenirs résistent mieux que les corps.",
-    "",
-    "Je revois les murs, les lumières, les gestes du soir.",
-    "",
-    "Tout ce qu’on traverse sans y penser quand on croit encore avoir du temps."
+    "Je revois les murs, les lumières, les gestes du soir. Tout ce qu’on traverse sans y penser quand on croit encore avoir du temps."
   ],
 
   choices: [
@@ -541,23 +451,10 @@ ch1_firefighter_3: {
 
   text: [
     "Quand je pense à cette soirée, je ne revois pas d’abord les mots.",
-    "",
-    "Je revois la cuisine.",
-    "",
-    "La lumière sur le plan de travail.",
-    "Le bruit léger des choses qu’on déplace sans y faire attention.",
-    "",
-    "Et Angela.",
-    "",
-    "Pas comme une image figée.",
-    "Comme une présence.",
-    "",
+    "Je revois la cuisine. La lumière sur le plan de travail. Le bruit léger des choses qu’on déplace sans y faire attention.",
+    "Et Angela. Pas comme une image figée. Comme une présence.",
     "Elle était là, derrière moi, dans cette évidence tranquille des gens qu’on aime et qu’on croit retrouver toujours.",
-    "",
-    "Aujourd’hui, c’est peut-être ça qui me fait le plus mal.",
-    "",
-    "Cette certitude que j’avais alors.",
-    "Et que je n’aurais jamais dû avoir."
+    "Aujourd’hui, c’est peut-être ça qui me fait le plus mal. Cette certitude que j’avais alors. Et que je n’aurais jamais dû avoir."
   ],
 
   onEnter: {
@@ -576,21 +473,9 @@ ch1_firefighter_3: {
   visualFx: "homeWarm",
 
   text: [
-    "Elle passe derrière moi.",
-    "",
-    "Sa main effleure mon dos.",
-    "",
-    "Un geste simple.",
-    "Presque absent.",
-    "",
-    "Un de ces gestes qu’on ne remarque pas assez quand ils existent encore.",
-    "",
+    "Elle passe derrière moi. Sa main effleure mon dos. Un geste simple. Presque absent. Un de ces gestes qu’on ne remarque pas assez quand ils existent encore.",
     "Avec le recul, je crois que c’était sa façon à elle de prendre ma température.",
-    "",
-    "Pas celle du corps.",
-    "L’autre.",
-    "",
-    "Celle qu’on cache même aux gens qui nous connaissent le mieux."
+    "Pas celle du corps. L’autre. Celle qu’on cache même aux gens qui nous connaissent le mieux."
   ],
 
   choices: [
@@ -629,24 +514,10 @@ ch1_firefighter_3: {
   visualFx: "homeWarm",
 
   text: [
-    "On parle de presque rien.",
-    "",
-    "C’est souvent comme ça que commencent les conversations importantes.",
-    "",
-    "Par une phrase banale.",
-    "Un ton un peu différent.",
-    "Un silence qui reste une seconde de trop.",
-    "",
-    "Angela me regarde.",
-    "",
-    "Puis elle dit :",
-    "",
+    "On parle de presque rien. C’est souvent comme ça que commencent les conversations importantes. Par une phrase banale. Un ton un peu différent. Un silence qui reste une seconde de trop.",
+    "Angela me regarde. Puis elle dit :",
     "« Tu reviens toujours fatigué d’endroits où tu prétends ne rien avoir laissé. »",
-    "",
-    "Je n’ai jamais oublié cette phrase.",
-    "",
-    "Peut-être parce qu’elle était vraie.",
-    "Peut-être parce qu’à ce moment-là, je ne voulais surtout pas qu’elle le soit."
+    "Je n’ai jamais oublié cette phrase. Peut-être parce qu’elle était vraie. Peut-être parce qu’à ce moment-là, je ne voulais surtout pas qu’elle le soit."
   ],
 
   choices: [
@@ -684,20 +555,9 @@ ch1_firefighter_3: {
   visualFx: "homeWarm",
 
   text: [
-    "Je fais ce que je savais très bien faire.",
-    "",
-    "Je contourne.",
-    "",
-    "Un demi-sourire.",
-    "Une phrase légère.",
-    "Une plaisanterie assez pauvre pour changer la direction de la conversation.",
-    "",
-    "Sur le moment, je devais croire que je protégeais quelque chose.",
-    "",
-    "La paix du soir.",
-    "Angela.",
-    "Moi-même, peut-être.",
-    "",
+    "Je fais ce que je savais très bien faire. Je contourne.",
+    "Un demi-sourire. Une phrase légère. Une plaisanterie assez pauvre pour changer la direction de la conversation.",
+    "Sur le moment, je devais croire que je protégeais quelque chose. La paix du soir. Angela. Moi-même, peut-être.",
     "En réalité, je repoussais seulement ce que je n’avais pas le courage de regarder."
   ],
 
@@ -713,22 +573,9 @@ ch1_firefighter_3: {
   visualFx: "homeWarm",
 
   text: [
-    "Cette fois-là, je ne détourne pas complètement.",
-    "",
-    "Je ne dis pas tout.",
-    "Je n’ai jamais su faire ça.",
-    "",
-    "Mais je laisse voir quelque chose.",
-    "",
-    "Très peu.",
-    "Une fissure à peine.",
-    "",
-    "Angela ne répond pas tout de suite.",
-    "",
-    "Sa main revient se poser entre mes omoplates.",
-    "",
-    "Et pendant une seconde, une seconde seulement, j’ai la sensation absurde que rien ne pourra vraiment nous atteindre.",
-    "",
+    "Cette fois-là, je ne détourne pas complètement. Je ne dis pas tout. Je n’ai jamais su faire ça.",
+    "Mais je laisse voir quelque chose. Très peu. Une fissure à peine.",
+    "Angela ne répond pas tout de suite. Sa main revient se poser entre mes omoplates. Et pendant une seconde, une seconde seulement, j’ai la sensation absurde que rien ne pourra vraiment nous atteindre.",
     "C’est fou comme on peut être naïf quand on est encore aimé."
   ],
 
@@ -744,14 +591,8 @@ ch1_family_memory_choice: {
   visualFx: "homeWarm",
 
   text: [
-    "Le souvenir pourrait s’arrêter là.",
-    "",
-    "Ce serait plus simple.",
-    "",
-    "Garder Angela dans cette lumière.",
-    "Garder sa main entre mes omoplates.",
-    "Garder l’idée fausse d’un soir encore intact.",
-    "",
+    "Le souvenir pourrait s’arrêter là. Ce serait plus simple.",
+    "Garder Angela dans cette lumière. Garder sa main entre mes omoplates. Garder l’idée fausse d’un soir encore intact.",
     "Mais les souvenirs honnêtes ne s’arrêtent pas toujours au bon endroit."
   ],
 
@@ -787,19 +628,9 @@ ch1_car_scratch_1: {
 
   text: [
     "Et puis il y a eu cette histoire de voiture.",
-    "",
-    "Une rayure.",
-    "",
-    "Une putain de rayure sur une putain de voiture.",
-    "",
-    "Je sais à quel point ça paraît ridicule raconté depuis ici.",
-    "J’en ai presque honte.",
-    "",
-    "Mais c’est aussi ça, une vie.",
-    "",
-    "On croit qu’elle est faite de grandes décisions, de serments, de courage et de catastrophes.",
-    "",
-    "Et puis, quand tout s’effondre, ce qui revient, c’est parfois une dispute idiote dans une cuisine trop éclairée."
+    "Une rayure. Une putain de rayure sur une putain de voiture.",
+    "Je sais à quel point ça paraît ridicule raconté depuis ici. J’en ai presque honte.",
+    "Mais c’est aussi ça, une vie. On croit qu’elle est faite de grandes décisions, de serments, de courage et de catastrophes. Et puis, quand tout s’effondre, ce qui revient, c’est parfois une dispute idiote dans une cuisine trop éclairée."
   ],
 
   choices: [
@@ -839,22 +670,10 @@ ch1_car_scratch_2: {
   visualFx: "homeWarm",
 
   text: [
-    "Si je pouvais, je reprendrais ce moment.",
-    "",
-    "Pas pour gagner la dispute.",
-    "Pas même pour avoir raison.",
-    "",
-    "Je la prendrais simplement dans mes bras.",
-    "",
-    "Je lui dirais que ça n’avait aucune importance.",
-    "Que rien de tout ça n’en avait.",
-    "",
+    "Si je pouvais, je reprendrais ce moment. Pas pour gagner la dispute. Pas même pour avoir raison.",
+    "Je la prendrais simplement dans mes bras. Je lui dirais que ça n’avait aucune importance. Que rien de tout ça n’en avait.",
     "Mais ce soir-là, comme tant d’autres soirs, j’ai laissé une chose minuscule prendre plus de place qu’elle ne méritait.",
-    "",
-    "Et maintenant, sous les gravats, il me reste ça aussi.",
-    "",
-    "La mémoire d’une rayure.",
-    "Et le poids ridicule de ce qu’on ne peut plus réparer."
+    "Et maintenant, sous les gravats, il me reste ça aussi. La mémoire d’une rayure. Et le poids ridicule de ce qu’on ne peut plus réparer."
   ],
 
   next: "ch1_f3_outside"
@@ -869,19 +688,9 @@ ch1_car_scratch_2: {
 
   text: [
     "Puis quelque chose coupe le moment.",
-    "",
-    "Un son.",
-    "Une vibration.",
-    "Peut-être la télévision.",
-    "Peut-être un téléphone.",
-    "",
-    "Je ne sais plus exactement.",
-    "",
-    "Ce dont je me souviens, en revanche, c’est de la brutalité de ce passage.",
-    "",
-    "Le monde venait de frapper à la porte.",
-    "",
-    "Et nous n’avions plus vraiment le choix que de lui ouvrir."
+    "Un son. Une vibration. Peut-être la télévision. Peut-être un téléphone.",
+    "Je ne sais plus exactement. Ce dont je me souviens, en revanche, c’est de la brutalité de ce passage.",
+    "Le monde venait de frapper à la porte. Et nous n’avions plus vraiment le choix que de lui ouvrir."
   ],
 
   choices: [
@@ -914,13 +723,8 @@ ch1_after_family_bridge: {
    mapNext: ["ch1_t1_tv_alert", "ch1_home_fragile"],
 
   text: [
-    "Le moment ne tient pas.",
-    "",
-    "Ces choses-là ne tiennent jamais longtemps.",
-    "",
-    "La maison, la chaleur, les gestes ordinaires.",
-    "",
-    "Tout cela paraît solide jusqu’à ce que le dehors décide de reprendre sa place."
+    "Le moment ne tient pas. Ces choses-là ne tiennent jamais longtemps.",
+    "La maison, la chaleur, les gestes ordinaires. Tout cela paraît solide jusqu’à ce que le dehors décide de reprendre sa place."
   ],
 
   getNext: (scene) => {
@@ -947,20 +751,10 @@ ch1_after_family_bridge: {
   },
 
   text: [
-    "La télévision était déjà allumée.",
-    "",
-    "Je ne saurais plus dire depuis combien de temps.",
-    "",
+    "La télévision était déjà allumée. Je ne saurais plus dire depuis combien de temps.",
     "Le son était un peu trop fort, comme souvent dans ces moments où l’information cesse d’être un bruit de fond pour devenir quelque chose qu’on est censé écouter.",
-    "",
-    "Des images passaient en boucle.",
-    "Des cartes.",
-    "Des visages fermés.",
-    "Des bandeaux rouges en bas de l’écran.",
-    "",
-    "Rien n’était encore vraiment clair.",
-    "",
-    "Mais quelque chose insistait déjà."
+    "Des images passaient en boucle. Des cartes. Des visages fermés. Des bandeaux rouges en bas de l’écran.",
+    "Rien n’était encore vraiment clair. Mais quelque chose insistait déjà."
   ],
 
   choices: [
@@ -990,23 +784,10 @@ ch1_after_family_bridge: {
   visualFx: "tvBlue",
 
   text: [
-    "Puis le gouverneur est apparu à l’écran.",
-    "",
-    "L’air grave.",
-    "La posture droite.",
-    "Cette façon très particulière qu’ont les dirigeants de parler lentement quand ils veulent donner l’impression que tout tient encore debout.",
-    "",
-    "Il a parlé de devoir.",
-    "D’humanité.",
-    "De responsabilité.",
-    "",
+    "Puis le gouverneur est apparu à l’écran. L’air grave. La posture droite. Cette façon très particulière qu’ont les dirigeants de parler lentement quand ils veulent donner l’impression que tout tient encore debout.",
+    "Il a parlé de devoir. D’humanité. De responsabilité.",
     "Notre État allait ouvrir ses frontières aux demandeurs d’asile de la guerre civile.",
-    "",
-    "Sur le moment, je me suis dit que c’était enfin autre chose que de les regarder mourir de loin.",
-    "",
-    "C’était naïf.",
-    "",
-    "Mais je crois que j’avais besoin d’y croire."
+    "Sur le moment, je me suis dit que c’était enfin autre chose que de les regarder mourir de loin. C’était naïf. Mais je crois que j’avais besoin d’y croire."
   ],
 
   choices: [
@@ -1039,28 +820,10 @@ ch1_after_family_bridge: {
   visualFx: "tvBlue",
 
   text: [
-    "Les images ont continué.",
-    "",
-    "Toujours les mêmes, ou presque.",
-    "Des colonnes de gens.",
-    "Des sacs portés à bout de bras.",
-    "Des enfants trop calmes pour leur âge.",
-    "",
-    "Les commentateurs employaient des mots propres.",
-    "Des mots qu’on peut prononcer sans rougir.",
-    "",
-    "Accueil.",
-    "Coordination.",
-    "Dispositif d’urgence.",
-    "",
-    "Mais je voyais bien que ces mots glissaient déjà vers autre chose.",
-    "",
-    "Il suffit parfois qu’une foule ait peur pour qu’un mot change de nature.",
-    "",
-    "Réfugié devient migrant.",
-    "Migrant devient problème.",
-    "Problème devient menace.",
-    "",
+    "Les images ont continué. Toujours les mêmes, ou presque. Des colonnes de gens. Des sacs portés à bout de bras. Des enfants trop calmes pour leur âge.",
+    "Les commentateurs employaient des mots propres. Des mots qu’on peut prononcer sans rougir. Accueil. Coordination. Dispositif d’urgence.",
+    "Mais je voyais bien que ces mots glissaient déjà vers autre chose. Il suffit parfois qu’une foule ait peur pour qu’un mot change de nature.",
+    "Réfugié devient migrant. Migrant devient problème. Problème devient menace.",
     "Et à partir de là, tout devient possible."
   ],
 
@@ -1090,18 +853,9 @@ ch1_t4_break: {
   mapNext: ["ch1_f1_kitchen", "ch1_home_fragile"],
 
   text: [
-    "À ce moment-là, rien n’était encore arrivé pour nous.",
-    "",
-    "Pas directement.",
-    "Pas dans la maison.",
-    "",
-    "C’est peut-être pour ça qu’on se permettait encore d’avoir des avis.",
-    "",
-    "Il y a une arrogance tranquille chez ceux qui regardent les catastrophes depuis leur canapé.",
-    "",
-    "Je l’avais aussi.",
-    "",
-    "Je ne le savais pas encore."
+    "À ce moment-là, rien n’était encore arrivé pour nous. Pas directement. Pas dans la maison.",
+    "C’est peut-être pour ça qu’on se permettait encore d’avoir des avis. Il y a une arrogance tranquille chez ceux qui regardent les catastrophes depuis leur canapé.",
+    "Je l’avais aussi. Je ne le savais pas encore."
   ],
 
   getNext: (scene) => {
@@ -1126,64 +880,51 @@ ch1_t4_break: {
   text: () => {
     const lines = [
       "Je crois que c’est à partir de là que tout est devenu irréversible.",
-      "",
-      "Pas parce qu’un homme avait gagné.",
-      "Pas seulement.",
-      "",
+
+      "Pas parce qu’un homme avait gagné. Pas seulement.",
+
       "Mais parce qu’un pays entier avait accepté l’idée qu’il fallait choisir des ennemis pour se sentir encore exister."
     ];
 
     if (playerState.tendernessToAngela >= 2 || playerState.familyAnchor >= 2) {
       lines.push(
-        "",
-        "À la maison, le silence avait changé de nature.",
-        "On ne se taisait plus parce qu’il n’y avait rien à dire.",
-        "On se taisait parce qu’on comprenait."
+
+        "À la maison, le silence avait changé de nature. On ne se taisait plus parce qu’il n’y avait rien à dire. On se taisait parce qu’on comprenait."
       );
     } else if (playerState.selfControl >= 2) {
       lines.push(
-        "",
-        "Moi, comme souvent, j’ai rangé ça quelque part.",
-        "Assez loin pour continuer à fonctionner.",
-        "Assez près pour ne jamais vraiment l’oublier."
+
+        "Moi, comme souvent, j’ai rangé ça quelque part. Assez loin pour continuer à fonctionner. Assez près pour ne jamais vraiment l’oublier."
       );
     } else if (playerState.stress >= 2) {
       lines.push(
-        "",
-        "Je me souviens d’une sensation très nette.",
-        "Celle d’avoir raté quelque chose.",
-        "Quelque chose qu’on aurait dû voir venir."
+
+        "Je me souviens d’une sensation très nette. Celle d’avoir raté quelque chose. Quelque chose qu’on aurait dû voir venir."
       );
     }
 
     if (playerState.politicalLucidity >= 2) {
       lines.push(
-        "",
-        "Je n’avais pas encore tous les mots.",
-        "Mais je voyais déjà le mécanisme.",
-        "La peur, la colère, puis l’ordre promis comme une délivrance."
+
+        "Je n’avais pas encore tous les mots. Mais je voyais déjà le mécanisme. La peur, la colère, puis l’ordre promis comme une délivrance."
       );
     } else if (playerState.beliefHelped === true) {
       lines.push(
-        "",
-        "Une part de moi voulait encore croire que les institutions tiendraient.",
-        "Qu’un vote, même violent, restait seulement un vote.",
+
+        "Une part de moi voulait encore croire que les institutions tiendraient. Qu’un vote, même violent, restait seulement un vote.",
         "J’avais tort."
       );
     } else if (playerState.beliefHelped === false) {
       lines.push(
-        "",
-        "Une part de moi savait déjà que les discours avaient gagné.",
-        "Pas parce qu’ils étaient vrais.",
-        "Parce qu’ils avaient trouvé où frapper."
+
+        "Une part de moi savait déjà que les discours avaient gagné. Pas parce qu’ils étaient vrais. Parce qu’ils avaient trouvé où frapper."
       );
     }
 
     lines.push(
-      "",
-      "Et maintenant je suis là.",
-      "Sous le béton.",
-      "",
+
+      "Et maintenant je suis là. Sous le béton.",
+
       "À chercher encore où tout a vraiment commencé."
     );
 
@@ -1205,11 +946,7 @@ visualFx: "rubble",
 
   text: [
     "Puis tout revient.",
-    "",
-    "Le poids.",
-    "La poussière.",
-    "La douleur.",
-    "",
+    "Le poids. La poussière. La douleur.",
     "Le présent ne me laisse jamais longtemps tranquille."
   ],
   next: "ch1_r2_hold_on"
@@ -1227,9 +964,9 @@ visualFx: "rubble",
   
   text: () => [
     "Je ferme les yeux une seconde. Pas pour fuir. Pour reprendre prise.",
-    "",
+
     getScene1MikaStateText(),
-    "",
+
     "Je ne peux pas encore mourir.",
     "Pas avant d’avoir compris."
   ],
@@ -1250,21 +987,10 @@ ch1_home_fragile:{
   transition:"fade",
   visualFx: "homeWarm",
 
-  text:[
-    "Après ça, la maison est restée la même en apparence.",
-    "",
-    "Les mêmes pièces.",
-    "Les mêmes lumières.",
-    "Les mêmes gestes du soir.",
-    "",
-    "C’est ça qui est terrible, avec les moments où tout commence vraiment à changer.",
-    "",
-    "Ils ressemblent beaucoup trop aux autres.",
-    "",
-    "Les filles jouaient dans le salon.",
-    "Angela lisait, ou faisait semblant.",
-    "Les informations tournaient en fond.",
-    "",
+  text: [
+    "Après ça, la maison est restée la même en apparence. Les mêmes pièces. Les mêmes lumières. Les mêmes gestes du soir.",
+    "C’est ça qui est terrible, avec les moments où tout commence vraiment à changer. Ils ressemblent beaucoup trop aux autres.",
+    "Les filles jouaient dans le salon. Angela lisait, ou faisait semblant. Les informations tournaient en fond.",
     "Et moi, comme beaucoup d’autres, je croyais encore que l’Histoire était quelque chose qui arrivait ailleurs."
   ],
 
@@ -1283,20 +1009,10 @@ ch1_angela_warning:{
   transition:"fade",
   visualFx: "homeWarm",
 
-  text:[
-    "Angela, elle, ne regardait pas les choses de cette manière.",
-    "",
-    "Elle avait cette façon de voir venir les coups avant les autres.",
-    "Ça m’agaçait parfois.",
-    "",
-    "Pas parce qu’elle se trompait.",
-    "",
-    "Parce que, trop souvent, elle avait raison.",
-    "",
-    "Ce soir-là, elle a regardé l’écran sans parler pendant quelques secondes.",
-    "",
-    "Puis elle a dit simplement :",
-    "",
+  text: [
+    "Angela, elle, ne regardait pas les choses de cette manière. Elle avait cette façon de voir venir les coups avant les autres.",
+    "Ça m’agaçait parfois. Pas parce qu’elle se trompait. Parce que, trop souvent, elle avait raison.",
+    "Ce soir-là, elle a regardé l’écran sans parler pendant quelques secondes. Puis elle a dit simplement :",
     "« Ça va mal finir cette histoire. »"
   ],
 
@@ -1335,21 +1051,10 @@ ch1_far_war:{
   transition:"fade",
   visualFx: "tvBlue",
 
-  text:[
-    "Au départ, pourtant, ce n’était qu’une guerre lointaine.",
-    "",
-    "Une de plus.",
-    "",
-    "Une guerre civile dans un pays que, quelques années plus tôt, j’aurais été incapable de situer correctement sur une carte.",
-    "",
-    "On en voyait les images au journal.",
-    "Des immeubles éventrés.",
-    "Des familles sur les routes.",
-    "Des chiffres de morts qui défilaient entre deux sujets plus légers.",
-    "",
-    "Et puis on passait à autre chose.",
-    "",
-    "C’est fou comme on peut s’habituer à la souffrance des autres quand elle reste à bonne distance."
+  text: [
+    "Au départ, pourtant, ce n’était qu’une guerre lointaine. Une de plus. Une guerre civile dans un pays que, quelques années plus tôt, j’aurais été incapable de situer correctement sur une carte.",
+    "On en voyait les images au journal. Des immeubles éventrés. Des familles sur les routes. Des chiffres de morts qui défilaient entre deux sujets plus légers.",
+    "Et puis on passait à autre chose. C’est fou comme on peut s’habituer à la souffrance des autres quand elle reste à bonne distance."
   ],
 
   next:"ch1_border_open"
@@ -1365,22 +1070,11 @@ ch1_border_open:{
   transition:"fade",
   visualFx: "streetCold",
 
-  text:[
+  text: [
     "Puis la distance a cessé d’exister.",
-    "",
-    "Quand le gouverneur a ouvert les frontières, les gens sont arrivés.",
-    "",
-    "Pas des masses abstraites.",
-    "Pas des flux.",
-    "",
-    "Des familles.",
-    "Des hommes épuisés.",
-    "Des femmes qui tenaient encore debout uniquement parce qu’un enfant marchait à côté d’elles.",
-    "Des vieux qu’on aurait juré déjà morts si leurs yeux n’avaient pas encore cherché quelque chose autour d’eux.",
-    "",
-    "Au début, on a appelé ça un devoir moral.",
-    "",
-    "Et pendant un court instant, j’ai voulu croire que nous étions capables d’être à la hauteur."
+    "Quand le gouverneur a ouvert les frontières, les gens sont arrivés. Pas des masses abstraites. Pas des flux.",
+    "Des familles. Des hommes épuisés. Des femmes qui tenaient encore debout uniquement parce qu’un enfant marchait à côté d’elles. Des vieux qu’on aurait juré déjà morts si leurs yeux n’avaient pas encore cherché quelque chose autour d’eux.",
+    "Au début, on a appelé ça un devoir moral. Et pendant un court instant, j’ai voulu croire que nous étions capables d’être à la hauteur."
   ],
 
   next:"ch1_media_turn"
@@ -1396,27 +1090,11 @@ ch1_media_turn:{
   transition:"fade",
   visualFx: "tvBlue",
 
-  text:[
-    "Puis les mots ont commencé à changer.",
-    "",
-    "Pas brutalement.",
-    "Jamais brutalement.",
-    "",
-    "C’est comme ça que les choses prennent racine.",
-    "",
-    "Un soir, on parle d’accueil.",
-    "Le lendemain, de gestion.",
-    "Puis de crise.",
-    "Puis d’invasion.",
-    "",
-    "Sur les plateaux, les mêmes visages revenaient en boucle.",
-    "Les mêmes colères propres.",
-    "Les mêmes fausses inquiétudes.",
-    "",
-    "On ne disait pas encore qu’il fallait haïr.",
-    "",
-    "On demandait simplement, avec l’air sérieux des gens raisonnables,",
-    "combien de temps encore nous allions accepter de perdre notre pays."
+  text: [
+    "Puis les mots ont commencé à changer. Pas brutalement. Jamais brutalement. C’est comme ça que les choses prennent racine.",
+    "Un soir, on parle d’accueil. Le lendemain, de gestion. Puis de crise. Puis d’invasion.",
+    "Sur les plateaux, les mêmes visages revenaient en boucle. Les mêmes colères propres. Les mêmes fausses inquiétudes.",
+    "On ne disait pas encore qu’il fallait haïr. On demandait simplement, avec l’air sérieux des gens raisonnables, combien de temps encore nous allions accepter de perdre notre pays."
   ],
 
   next:"ch1_firehouse_shift"
@@ -1432,27 +1110,12 @@ ch1_firehouse_shift:{
   transition:"fade",
   visualFx: "firehouseCold",
 
-  text:[
-    "Même à la caserne, quelque chose changeait.",
-    "",
-    "Au début, ce n’était presque rien.",
-    "",
-    "Des départs plus tendus.",
-    "Des regards plus méfiants dans certaines rues.",
-    "Des interventions où l’on sentait que notre uniforme ne suffisait plus à rassurer.",
-    "",
+  text: [
+    "Même à la caserne, quelque chose changeait. Au début, ce n’était presque rien.",
+    "Des départs plus tendus. Des regards plus méfiants dans certaines rues. Des interventions où l’on sentait que notre uniforme ne suffisait plus à rassurer.",
     "Puis on nous a équipés de gilets pare-balles.",
-    "",
-    "Je me souviens très bien du mien.",
-    "",
-    "Du poids.",
-    "De la gêne.",
-    "Et surtout de cette impression désagréable de trahir quelque chose en l’enfilant.",
-    "",
-    "J’étais pompier.",
-    "",
-    "J’étais là pour porter secours.",
-    "",
+    "Je me souviens très bien du mien. Du poids. De la gêne. Et surtout de cette impression désagréable de trahir quelque chose en l’enfilant.",
+    "J’étais pompier. J’étais là pour porter secours.",
     "Je ne comprenais pas encore à quel moment un homme qui vient aider peut devenir une cible."
   ],
 
@@ -1469,23 +1132,12 @@ ch1_violence_rise:{
   transition:"fade",
   visualFx: "streetCold",
 
-  text:[
-    "Les violences ont suivi.",
-    "",
-    "Comme si tout le monde n’attendait plus qu’une autorisation.",
-    "",
-    "Des insultes d’abord.",
-    "Des vitres brisées.",
-    "Des camps attaqués.",
-    "",
+  text: [
+    "Les violences ont suivi. Comme si tout le monde n’attendait plus qu’une autorisation.",
+    "Des insultes d’abord. Des vitres brisées. Des camps attaqués.",
     "Puis des corps.",
-    "",
     "Chaque jour, dans nos ambulances, nous intervenions pour des hommes tabassés, des femmes blessées, des gamins en état de choc.",
-    "",
-    "On parlait d’actes isolés.",
-    "",
-    "Il y en avait tous les jours.",
-    "",
+    "On parlait d’actes isolés. Il y en avait tous les jours.",
     "À force d’être isolés ensemble, les actes finissent par dessiner un pays."
   ],
 
@@ -1502,24 +1154,11 @@ ch1_ligue_surge:{
   transition:"fade",
   visualFx: "ligueRed",
 
-  text:[
-    "La Ligue n’a pas créé tout ça à elle seule.",
-    "",
-    "Ce serait trop facile de le croire.",
-    "",
-    "Elle a fait quelque chose de bien plus efficace.",
-    "",
-    "Elle a donné une forme à ce que beaucoup ressentaient déjà.",
-    "Une langue.",
-    "Des slogans.",
-    "Des ennemis.",
-    "",
+  text: [
+    "La Ligue n’a pas créé tout ça à elle seule. Ce serait trop facile de le croire. Elle a fait quelque chose de bien plus efficace.",
+    "Elle a donné une forme à ce que beaucoup ressentaient déjà. Une langue. Des slogans. Des ennemis.",
     "Leur dirigeant parlait avec cette assurance glaciale des hommes qui savent transformer la peur des autres en marchepied.",
-    "",
-    "Il ne disait presque jamais les choses frontalement.",
-    "",
-    "Il n’en avait pas besoin.",
-    "",
+    "Il ne disait presque jamais les choses frontalement. Il n’en avait pas besoin.",
     "Le pays complétait les phrases à sa place."
   ],
 
@@ -1536,29 +1175,11 @@ ch1_ligue_vote:{
   transition:"fade",
   visualFx: "ligueRed",
 
-  text:[
-    "Le jour des élections, Angela et moi sommes allés voter.",
-    "",
-    "Les enfants nous accompagnaient.",
-    "",
-    "Ils ne comprenaient pas tout, bien sûr.",
-    "Ils étaient surtout contents de mettre le papier dans l’enveloppe.",
-    "",
-    "Nous, on y tenait.",
-    "",
-    "À cette idée simple, presque naïve, qu’il fallait apprendre aux enfants que les choses se changent ainsi.",
-    "Avec un bulletin.",
-    "Avec une voix.",
-    "Avec un geste calme posé au milieu du bruit.",
-    "",
-    "Devant le bureau de vote, les militants de la Ligue se tenaient déjà comme si tout leur appartenait.",
-    "",
-    "Je sentais Angela bouillir à côté de moi.",
-    "",
-    "Je lui ai serré la main pour lui dire de se calmer.",
-    "",
-    "Aujourd’hui encore, je ne sais pas si c’était de la prudence.",
-    "Ou déjà de la lâcheté."
+  text: [
+    "Le jour des élections, Angela et moi sommes allés voter. Les enfants nous accompagnaient. Ils ne comprenaient pas tout, bien sûr. Ils étaient surtout contents de mettre le papier dans l’enveloppe.",
+    "Nous, on y tenait. À cette idée simple, presque naïve, qu’il fallait apprendre aux enfants que les choses se changent ainsi. Avec un bulletin. Avec une voix. Avec un geste calme posé au milieu du bruit.",
+    "Devant le bureau de vote, les militants de la Ligue se tenaient déjà comme si tout leur appartenait. Je sentais Angela bouillir à côté de moi. Je lui ai serré la main pour lui dire de se calmer.",
+    "Aujourd’hui encore, je ne sais pas si c’était de la prudence. Ou déjà de la lâcheté."
   ],
 
   next:"ch1_end_election"
@@ -1574,24 +1195,12 @@ ch1_end_election:{
   transition:"fade",
   visualFx: "ligueRed",
 
-  text:[
+  text: [
     "Ce fut la dernière élection qu’il y eut ici.",
-    "",
-    "Le soir même, les résultats apparaissaient au journal de vingt heures.",
-    "",
-    "Je me souviens encore des cris de joie dans la rue.",
-    "Et des mines déconfites dans la maison.",
-    "",
-    "À l’annonce du score :",
-    "",
+    "Le soir même, les résultats apparaissaient au journal de vingt heures. Je me souviens encore des cris de joie dans la rue. Et des mines déconfites dans la maison. À l’annonce du score :",
     "78 %.",
-    "",
-    "Sur les 326 membres de la chambre des députés,",
-    "254 étaient passés sous les couleurs de la Ligue.",
-    "",
-    "Ce soir-là, notre État a dit adieu à la démocratie.",
-    "",
-    "Et comment lui en vouloir."
+    "Sur les 326 membres de la chambre des députés, 254 étaient passés sous les couleurs de la Ligue.",
+    "Ce soir-là, notre État a dit adieu à la démocratie. Et comment lui en vouloir."
   ],
 
   next:"ch1_c1_false_calm"
@@ -1607,9 +1216,7 @@ ch1_end_election:{
   transition: "fade",
 
   text: [
-    "L’origine n’explique pas tout.",
-    "",
-    "Mais elle laisse une trace."
+    "L’origine n’explique pas tout. Mais elle laisse une trace."
   ]
 },
   },
@@ -1973,3 +1580,4 @@ export async function startScene1(state = {}, deps = {}) {
     reset: () => resetScene1(state)
   };
 }
+

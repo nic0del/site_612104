@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <!-- Dégradé métal incandescent -->
+    <linearGradient id="fireGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe2a6"/>
+      <stop offset="40%" stop-color="#ffb347"/>
+      <stop offset="100%" stop-color="#a33a00"/>
+    </linearGradient>
+
+    <!-- Glow léger -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="0.8" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Fond noir -->
+  <rect width="64" height="64" fill="#000000"/>
+
+  <!-- 612104 -->
+  <text
+    x="32"
+    y="38"
+    text-anchor="middle"
+    font-size="18"
+    font-weight="900"
+    font-family="Impact, Arial Black, sans-serif"
+    letter-spacing="0.5"
+    fill="url(#fireGold)"
+    filter="url(#glow)">
+    612104
+  </text>
+</svg>
