@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>612104</title>
-  <link rel="stylesheet" href="./css/main.css">
+  <link rel="stylesheet" href="./css/main.css?v=chapter2-v2">
   <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
 </head>
 
@@ -127,6 +127,7 @@
         <button id="btnSound" class="tinyBtn">Son : …</button>
         <span>v0.1</span>
       </div>
+      <p class="metaLine" id="menuSaveStatus" role="status"></p>
     </div>
   </section>
 
@@ -136,7 +137,11 @@
   <div class="sceneImage" id="scene1Image"></div>
 
   <div class="sceneTopBar" id="sceneTopBar">
-  <div class="scenePlayer" id="scenePlayerName">Bienvenue</div>
+  <div class="sceneIdentity">
+    <div class="scenePlayer" id="scenePlayerName">Bienvenue</div>
+    <div class="saveStatus" id="saveStatus" role="status"></div>
+    <div class="saveStatus hidden" id="chapterWorkNote">Chapitre 2 — visuels provisoires</div>
+  </div>
 
   <div class="sceneTopActions">
     <button id="btnGameFullscreen" class="sceneTopBtn">⛶ Plein écran</button>
@@ -180,9 +185,9 @@
 <!-- SCREEN: Chapter end -->
 <section class="screen chapter-end" id="screen-chapter-end">
   <div class="chapterEndBox">
-    <h2>Chapitre 1 terminé</h2>
+    <h2 id="chapterEndTitle">Chapitre 1 terminé</h2>
 
-    <p>
+    <p id="chapterEndSummary">
       Tu as parcouru les premiers fragments de la mémoire de Mika.
       Le chemin n’est pas complet, mais il laisse déjà une trace.
     </p>
@@ -192,6 +197,7 @@
     </p>
 
     <div class="chapterEndActions">
+      <button id="btnStartChapter2" class="hidden">Commencer le chapitre 2</button>
       <button id="btnReadNovelChapter1">📖 Lire le chapitre 1 du roman</button>
       <button id="btnChapterEndMenu">Retour au menu</button>
       <button id="btnChapterEndSupport">♡ Soutenir le projet</button>
@@ -274,9 +280,29 @@
   <source src="./assets/audio/bonus/danydory-ambient-atmospheric-background-music_echoes-of-the-future-484633.mp3" type="audio/mpeg">
 </audio>
 
+  <!-- One version for the entire module graph: shared state stays a singleton. -->
+  <script type="importmap">
+{
+  "imports": {
+    "./js/audio.js": "./js/audio.js?v=chapter2-v2",
+    "./js/bonusTexts.js": "./js/bonusTexts.js?v=chapter2-v2",
+    "./js/chapterMap.js": "./js/chapterMap.js?v=chapter2-v2",
+    "./js/router.js": "./js/router.js?v=chapter2-v2",
+    "./js/saveQueue.js": "./js/saveQueue.js?v=chapter2-v2",
+    "./js/scenes/chapterRunner.js": "./js/scenes/chapterRunner.js?v=chapter2-v2",
+    "./js/scenes/engine.js": "./js/scenes/engine.js?v=chapter2-v2",
+    "./js/scenes/scene1.js": "./js/scenes/scene1.js?v=chapter2-v2",
+    "./js/scenes/scene2.js": "./js/scenes/scene2.js?v=recit-c2-v2",
+    "./js/state.js": "./js/state.js?v=chapter2-v2",
+    "./js/supabase.js": "./js/supabase.js?v=chapter2-v2",
+    "./js/ui.js": "./js/ui.js?v=chapter2-v2"
+  }
+}
+  </script>
   <!-- Main script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script type="module" src="./js/supabase.js"></script>
-<script type="module" src="./js/main.js?v=62808d0"></script>
+
+<script type="module" src="./js/main.js?v=chapter2-v2"></script>
 </body>
 </html>
+

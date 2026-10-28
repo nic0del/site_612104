@@ -519,6 +519,11 @@ input:focus{
 
 /* panneau narratif */
 .choicePanel{
+  box-sizing: border-box;
+  max-height: calc(100vh - 150px);
+  max-height: calc(100dvh - 150px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
   position: absolute;
   left: 50%;
   bottom: 28px;
@@ -622,7 +627,29 @@ input:focus{
 }
 
 .hidden{
-  display: none;
+  display: none !important;
+}
+
+.sceneIdentity { max-width: 100%; }
+.saveStatus {
+  margin: 6px 8px 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: rgba(255,255,255,0.82);
+}
+.screen.chapter-end.active {
+  display: block;
+  overflow-y: auto;
+}
+@media (max-width: 900px) {
+  .choicePanel { min-height: 0; max-height: calc(100dvh - 190px); }
+  .screen.menu.active { overflow-y: auto; }
+  .menuPanel { box-sizing: border-box; }
+}
+@media (max-height: 500px) {
+  .sceneTopBar { top: 8px; flex-direction: row; }
+  .sceneIdentity .scenePlayer { display: none; }
+  .choicePanel { min-height: 0; max-height: calc(100dvh - 95px); }
 }
 
 /* =========================
@@ -1586,4 +1613,15 @@ input:focus{
   margin-top: 16px;
   font-size: 0.95rem;
   color: #f1c47b;
+}
+
+/* Keep narrative controls reachable in narrow and short viewports. */
+.gateBox, .loginBox, .supportBox, .chapterEndBox, .novelReaderBox {
+  box-sizing: border-box;
+}
+@media (max-width: 900px) {
+  .choicePanel { min-height: 0; max-height: calc(100dvh - 190px); }
+}
+@media (max-height: 500px) {
+  .choicePanel { min-height: 0; max-height: calc(100dvh - 95px); }
 }

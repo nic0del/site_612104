@@ -10,6 +10,8 @@ const MAP_PADDING_X = 220;
 const MAP_PADDING_Y = 70;
 
 const CAMERA_STEP_RATIO = 0.72;
+let mapGeneration = 0;
+export function stopChapterMap() { mapGeneration++; }
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -353,7 +355,8 @@ async function playRevealSequence({
   nodeElsById,
   edgeEls,
   visitedOrder,
-  layoutNodesById
+  layoutNodesById,
+  isActive
 }) {
   const prefersReducedMotion = window.matchMedia?.(
     "(prefers-reduced-motion: reduce)"
@@ -366,6 +369,7 @@ async function playRevealSequence({
   await sleep(prefersReducedMotion ? 80 : 650);
 
   for (const nodeId of visitedOrder) {
+    if (!isActive()) return;
     const node = layoutNodesById.get(nodeId);
     const nodeEl = nodeElsById.get(nodeId);
 
@@ -375,6 +379,7 @@ async function playRevealSequence({
     setCurrentNode(nodeElsById, nodeId);
 
     await sleep(prefersReducedMotion ? 80 : 700);
+    if (!isActive()) return;
 
     nodeEl.classList.remove("locked");
     nodeEl.classList.add("revealed");
@@ -387,6 +392,9 @@ async function playRevealSequence({
 }
 
 export function renderChapterMap({ map, scene, onContinue }) {
+  stopChapterMap();
+  const generation = mapGeneration;
+  const isActive = () => generation === mapGeneration;
   const titleEl = document.getElementById("chapterMapTitle");
   const subtitleEl = document.getElementById("chapterMapSubtitle");
   const viewport = document.getElementById("chapterMapViewport");
@@ -495,6 +503,7 @@ export function renderChapterMap({ map, scene, onContinue }) {
   showScreen("chapter-map");
 
   requestAnimationFrame(() => {
+    if (!isActive()) return;
     const camera = createCamera({
       viewport,
       stage,
@@ -516,13 +525,16 @@ export function renderChapterMap({ map, scene, onContinue }) {
         nodeElsById,
         edgeEls,
         visitedOrder,
-        layoutNodesById
+        layoutNodesById,
+        isActive
       });
     }
   });
 
   if (btnContinue) {
     btnContinue.onclick = () => {
+      if (!isActive()) return;
+      stopChapterMap();
       if (typeof onContinue === "function") {
         onContinue();
       }

@@ -1,41 +1,12 @@
-import { showScreen } from "../router.js";
-import { playerState, savePlayerState } from "../state.js";
-import { createSceneEngine } from "./engine.js";
+import { playerState } from "../state.js";
+import { startChapter } from "./chapterRunner.js";
 
-const chapterCard = document.getElementById("chapterCard");
-const scene1Image = document.getElementById("scene1Image");
-const ambience = document.getElementById("scene1Ambience");
-const choicePanel = document.getElementById("choicePanel");
-const choiceTitle = document.getElementById("choiceTitle");
-const choiceList = document.getElementById("choiceList");
-const textContainer = document.getElementById("text-container");
-const fade = document.getElementById("fade");
-const engine = createSceneEngine({
-  chapterCard,
-  sceneImage: scene1Image,
-  choicePanel,
-  choiceTitle,
-  choiceList,
-  textContainer,
-  fade,
-  onChoice: handleChoice
-});
-const {
-  clearTimers,
-  wait,
-  typeWriter,
-  transitionToImage,
-  clearChoices,
-  showPanelOnly,
-  showChoices,
-  hideChoices,
-  setChoiceMap,
-  getChoiceMap
-} = engine;
+function getChoiceEcho(scene, nodeId, variants, fallback = "") {
+  const previous = (scene?.choiceHistory || []).slice().reverse()
+    .find(choice => choice?.nodeId === nodeId);
+  return variants[previous?.choiceId] || fallback;
+}
 
-/* =========================
-   MOTEUR NARRATIF
-   ========================= */
 function getProudReasonText() {
   if (playerState.proudReason === "save") {
     return "Au fond, j'ai toujours voulu croire que sauver quelqu'un suffisait encore à donner un sens à tout le reste.";
@@ -150,7 +121,11 @@ const NODES = {
 // Bloc 1 : bascule politique + fausse normalité + adoption
 // =========================
 c2_intro: {
-    image: "./assets/image_fond/black_soft.png",
+    id: "c2_intro",
+  label: "Le lendemain",
+  kind: "choice",
+  visualFx: "rubble",
+  image: "./assets/image_fond/scene1/black_soft.png",
     transition: "fade",
     text: "Le lendemain, il n'y avait déjà plus personne aux commandes.",
     choices: [
@@ -159,8 +134,12 @@ c2_intro: {
   },
 
 c2_governor_resigns: {
-  await: () => wait(400),
-  image: "./assets/image_fond/c2_governor_resigns.png",
+
+  id: "c2_governor_resigns",
+  label: "Démission du gouverneur",
+  kind: "choice",
+  visualFx: "tvBlue",
+  image: "./assets/image_fond/scene2/c2_governor_resigns.png",
   transition: "fade",
   text:
     "Comme on pouvait s'y attendre, dès le lendemain et devant cette écrasante victoire de la Ligue, " +
@@ -182,7 +161,11 @@ c2_governor_resigns: {
 },
 
 c2_vornic_elected: {
-  image: "./assets/image_fond/c2_vornic_tv.png",
+  id: "c2_vornic_elected",
+  label: "Vornic",
+  kind: "choice",
+  visualFx: "ligueRed",
+  image: "./assets/image_fond/scene2/c2_vornic_tv.png",
   transition: "fade",
   text:
     "Dans la foulée, la chambre des députés élut un nouveau gouverneur.\n\n" +
@@ -201,7 +184,11 @@ c2_vornic_elected: {
 },
 
 c2_full_powers: {
-  image: "./assets/image_fond/c2_full_powers.png",
+  id: "c2_full_powers",
+  label: "Les pleins pouvoirs",
+  kind: "choice",
+  visualFx: "ligueRed",
+  image: "./assets/image_fond/scene2/c2_full_powers.png",
   transition: "fade",
   text:
     "Le soir même, devant 'l'urgence de la situation', comme il disait, " +
@@ -221,7 +208,11 @@ c2_full_powers: {
 },
 
 c2_stay_or_leave: {
-  image: "./assets/image_fond/c2_home_reflection.png",
+  id: "c2_stay_or_leave",
+  label: "Rester ou partir",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_home_reflection.png",
   transition: "fade",
   text:
     "Angela et moi savions déjà que les changements n'iraient pas dans le sens que nous espérions. " +
@@ -252,10 +243,14 @@ c2_stay_or_leave: {
 },
 
 c2_daily_life: {
-  image: "./assets/image_fond/c2_daily_life.png",
+  id: "c2_daily_life",
+  label: "La vie continue",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_daily_life.png",
   transition: "fade",
   text:
-  "Les premiers temps, " +
+  () => "Les premiers temps, " +
   "malgré la présence croissante des milices dans les rues, " +
   "la vie semblait continuer presque normalement.\n\n" +
   "Angela et moi partions travailler comme avant. " +
@@ -275,10 +270,14 @@ c2_daily_life: {
 },
 
 c2_night_shift_reflection: {
-  image: "./assets/image_fond/c2_night_shift.png",
+  id: "c2_night_shift_reflection",
+  label: "Les gardes de nuit",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_night_shift.png",
   transition: "fade",
   text:
-  "Je travaillais souvent de nuit à cette époque. " +
+  () => "Je travaillais souvent de nuit à cette époque. " +
   "J'aimais ça. " +
   "J'ai toujours préféré la nuit au jour.\n\n" +
   "Dans l'obscurité, " +
@@ -297,8 +296,12 @@ c2_night_shift_reflection: {
 },
 
 c2_adoption_memory_intro: {
-  await: () => wait(400),
-  image: "./assets/image_fond/c2_adoption_intro.png",
+
+  id: "c2_adoption_memory_intro",
+  label: "Le souvenir de l’adoption",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_adoption_intro.png",
   transition: "fade",
   text:
     "Pour nous, " +
@@ -319,7 +322,11 @@ c2_adoption_memory_intro: {
 },
 
 c2_courtroom: {
-  image: "./assets/image_fond/c2_courtroom.png",
+  id: "c2_courtroom",
+  label: "Au tribunal",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_courtroom.png",
   transition: "fade",
   text:
     "Nous étions tous les cinq dans le bureau du juge aux affaires familiales.\n\n" +
@@ -341,7 +348,11 @@ c2_courtroom: {
 },
 
 c2_angela_becomes_mother: {
-  image: "./assets/image_fond/c2_angela_mother.png",
+  id: "c2_angela_becomes_mother",
+  label: "Angela devient leur mère",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_angela_mother.png",
   transition: "fade",
   text:
     "Après cette étreinte avec les enfants, " +
@@ -365,7 +376,11 @@ c2_angela_becomes_mother: {
 },
 
 c2_autumn_walk: {
-  image: "./assets/image_fond/c2_autumn_walk.png",
+  id: "c2_autumn_walk",
+  label: "Promenade d’automne",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_autumn_walk.png",
   transition: "fade",
   text:
     "C'était un mercredi, je crois. " +
@@ -383,33 +398,41 @@ c2_autumn_walk: {
   choices: [
     { id: "c2_walk_enjoy", label: "Profiter de l'instant.", next: "c2_restaurant_plan" },
     { id: "c2_walk_children", label: "Regarder les enfants.", next: "c2_restaurant_plan" },
-    { id: "c2_walk_fragile", label: "Sentir, sans savoir pourquoi, que cela ne durerait pas.", next: "c2_restaurant_plan" }
+    { id: "c2_walk_fragile", label: "Essayer de retenir chaque détail de cette matinée.", next: "c2_restaurant_plan" }
   ]
 },
 
 c2_restaurant_plan: {
-  image: "./assets/image_fond/c2_restaurant_plan.png",
+  id: "c2_restaurant_plan",
+  label: "Fêter la famille",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_restaurant_plan.png",
   transition: "fade",
   text:
-    "On allait simplement fêter ça. " +
-    "Notre famille. " +
-    "Cette nouvelle vie.\n\n" +
-    "Quelque chose de simple. " +
-    "Quelque chose de normal.\n\n" +
-    "C'est peut-être pour ça que ce souvenir me revient avec une telle violence. " +
-    "Parce qu'il contenait encore tout. " +
-    "Avant que le reste n'arrive.",
+    (scene) =>
+    "On allait simplement fêter ça. Notre famille. Cette nouvelle vie.\n\n" +
+    "Quelque chose de simple. Quelque chose de normal.\n\n" +
+    getChoiceEcho(scene, "c2_autumn_walk", {
+      c2_walk_enjoy: "Je me laissais gagner par leur bonne humeur.",
+      c2_walk_children: "Je regardais les enfants discuter de ce qu'ils allaient commander.",
+      c2_walk_fragile: "Je voulais garder en mémoire les feuilles, la lumière et leurs voix."
+    }, "Ce jour-là, nous avions toutes les raisons d'être heureux."),
   choices: [
-    { id: "c2_to_gunshot_memory", label: "Et pourtant Angela avait déjà eu peur de me perdre.", next: "c2_gunshot_memory_intro" }
+    { id: "c2_to_gunshot_memory", label: "Repenser à ce qu'Angela avait déjà traversé avec moi.", next: "c2_gunshot_memory_intro" }
   ]
 },
 
 c2_gunshot_memory_intro: {
-  await: () => wait(400),
-  image: "./assets/image_fond/c2_gunshot_intro.png",
+
+  id: "c2_gunshot_memory_intro",
+  label: "La peur d’Angela",
+  kind: "choice",
+  visualFx: "rubble",
+  image: "./assets/image_fond/scene2/c2_gunshot_intro.png",
   transition: "fade",
   text:
-    "Nana se faisait toujours du mauvais sang quand je partais en intervention.\n\n" +
+    "Bien avant cette matinée au tribunal, Nana avait déjà eu peur de me perdre en intervention.\n\n" +
     "Elle ne m'avait pas connu avant que je sois pompier. " +
     "Et les alertes avaient toujours rythmé notre vie.\n\n" +
     "Il était arrivé par deux fois qu'elle reçoive un appel de mon chef de garde pour lui annoncer que j'avais eu un problème. " +
@@ -425,7 +448,11 @@ c2_gunshot_memory_intro: {
 },
 
 c2_drunk_man_scene: {
-  image: "./assets/image_fond/c2_drunk_man_scene.png",
+  id: "c2_drunk_man_scene",
+  label: "L’intervention",
+  kind: "choice",
+  visualFx: "rubble",
+  image: "./assets/image_fond/scene2/c2_drunk_man_scene.png",
   transition: "fade",
   text:
     "Il faisait nuit. " +
@@ -450,7 +477,11 @@ c2_drunk_man_scene: {
 },
 
 c2_shot: {
-  image: "./assets/image_fond/c2_shot.png",
+  id: "c2_shot",
+  label: "Le coup de feu",
+  kind: "choice",
+  visualFx: "rubble",
+  image: "./assets/image_fond/scene2/c2_shot.png",
   transition: "fade",
   text:
     "L'homme a bondi sur le côté du canapé. " +
@@ -471,7 +502,11 @@ c2_shot: {
 },
 
 c2_hospital_angela: {
-  image: "./assets/image_fond/c2_hospital_angela.png",
+  id: "c2_hospital_angela",
+  label: "À l’hôpital",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_hospital_angela.png",
   transition: "fade",
   text:
     "Quand je me suis réveillé, " +
@@ -481,9 +516,8 @@ c2_hospital_angela: {
     "J'ai eu droit à un immense baiser. " +
     "À une déclaration d'amour comme jamais elle ne m'en avait faite. " +
     "Et à une gifle à m'en décrocher la mâchoire.\n\n" +
-    "Je pense que c'était de cela qu'elle avait peur. " +
-    "Que cette fois, " +
-    "je n'aie pas autant de chance.",
+    "Ce jour-là, à l'hôpital, j'avais compris à quel point elle avait eu peur. " +
+    "Bien après ma sortie, chacun de mes départs continuerait de l'inquiéter.",
   choiceReveal: { initialDelayMs: 500, staggerMs: 300 },
   choices: [
     { id: "c2_hospital_love", label: "Retenir son amour.", next: "c2_siren" },
@@ -493,9 +527,15 @@ c2_hospital_angela: {
 },
 
 c2_siren: {
-  image: "./assets/image_fond/c2_siren.png",
+  id: "c2_siren",
+  label: "La sirène",
+  kind: "choice",
+  visualFx: "streetCold",
+  image: "./assets/image_fond/scene2/c2_siren.png",
   transition: "fade",
   text:
+  () => "Le souvenir de l'hôpital s'efface. Je retrouve cette matinée d'automne : " +
+  "Angela, les enfants, le chemin du restaurant. Nous allions fêter l'adoption.\n\n" +
   "Un bruit long et persistant a retenti dans toutes les rues de la ville.\n\n" +
   "La sirène d'alerte générale.\n\n" +
   "C'était la première fois que je l'entendais autrement que pour un essai. " +
@@ -512,10 +552,14 @@ c2_siren: {
 },
 
 c2_goodbye_family: {
-  image: "./assets/image_fond/c2_goodbye_family.png",
+  id: "c2_goodbye_family",
+  label: "Les adieux",
+  kind: "choice",
+  visualFx: "homeWarm",
+  image: "./assets/image_fond/scene2/c2_goodbye_family.png",
   transition: "fade",
   text:
-  "J'ai embrassé les enfants sur le front. " +
+  () => "J'ai embrassé les enfants sur le front. " +
   "Puis j'ai serré Nana longuement dans mes bras.\n\n" +
   "\"Je te tiens au courant chérie. " +
   "Rentre à la maison avec les enfants, c'est plus sûr. " +
@@ -537,7 +581,11 @@ c2_goodbye_family: {
 },
 
 c2_run_to_barracks: {
-  image: "./assets/image_fond/c2_run_to_barracks.png",
+  id: "c2_run_to_barracks",
+  label: "Vers la caserne",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_run_to_barracks.png",
   transition: "fade",
   text:
     "Je tournais les talons et je rejoignais en courant ma caserne à quelques centaines de mètres à peine.\n\n" +
@@ -558,10 +606,14 @@ c2_run_to_barracks: {
 },
 
 c2_barracks_arrival: {
-  image: "./assets/image_fond/c2_barracks_arrival.png",
+  id: "c2_barracks_arrival",
+  label: "C’est la guerre",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_barracks_arrival.png",
   transition: "fade",
   text:
-    "J'arrivai rapidement au centre. " +
+    () => "J'arrivai rapidement au centre. " +
     "Les hommes de la garde étaient déjà là.\n\n" +
     "Je rentrai dans la salle radio pour aller aux nouvelles. " +
     "Un caporal nouvellement arrivé me lança : " +
@@ -574,8 +626,8 @@ c2_barracks_arrival: {
     "La guerre était déclarée.\n\n" +
     getProudReasonText() ,
   choiceReveal: { initialDelayMs: 450, staggerMs: 260 },
-  choices: [
-  { id: "c2_barracks_expression", label: "Croire un instant à une simple expression.", next: "c2_war_declared" },
+  choices: () => [
+  { id: "c2_barracks_expression", label: "Me raccrocher un instant au sens habituel de cette expression.", next: "c2_war_declared" },
   { id: "c2_barracks_understand", label: "Comprendre immédiatement.", next: "c2_war_declared" },
   { id: "c2_barracks_absorb", label: "Encaisser sans commenter.", next: "c2_war_declared" },
   {
@@ -589,7 +641,11 @@ c2_barracks_arrival: {
 },
 
 c2_war_declared: {
-  image: "./assets/image_fond/c2_war_declared.png",
+  id: "c2_war_declared",
+  label: "La dépêche",
+  kind: "choice",
+  visualFx: "tvBlue",
+  image: "./assets/image_fond/scene2/c2_war_declared.png",
   transition: "fade",
   text:
     "Tous les services étaient mobilisés en urgence. " +
@@ -611,7 +667,11 @@ c2_war_declared: {
 },
 
 c2_mobilisation: {
-  image: "./assets/image_fond/c2_mobilisation.png",
+  id: "c2_mobilisation",
+  label: "La mobilisation",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_mobilisation.png",
   transition: "fade",
   text:
     "Sur les hommes de la caserne, " +
@@ -629,7 +689,11 @@ c2_mobilisation: {
 },
 
 c2_gear_check: {
-  image: "./assets/image_fond/c2_gear_check.png",
+  id: "c2_gear_check",
+  label: "Le matériel et la photo",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_gear_check.png",
   transition: "fade",
   text:
     "Les premières heures, " +
@@ -653,7 +717,11 @@ c2_gear_check: {
 },
 
 c2_failed_call_home: {
-  image: "./assets/image_fond/c2_failed_call_home.png",
+  id: "c2_failed_call_home",
+  label: "Un appel impossible",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_failed_call_home.png",
   transition: "fade",
   text:
     "Depuis le début de l'alerte, " +
@@ -674,10 +742,14 @@ c2_failed_call_home: {
 },
 
 c2_waiting: {
-  image: "./assets/image_fond/c2_waiting.png",
+  id: "c2_waiting",
+  label: "L’attente",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_waiting.png",
   transition: "fade",
   text:
-  "Je regardais les minutes défiler au ralenti. " +
+  () => "Je regardais les minutes défiler au ralenti. " +
   "Je détestais ça.\n\n" +
   "On recevait des appels, oui. " +
   "Mais des interventions normales. " +
@@ -689,8 +761,8 @@ c2_waiting: {
   getWaitingStateText() + "\n\n" +
   getMikaInnerColor(),
   choiceReveal: { initialDelayMs: 500, staggerMs: 300 },
-  choices: [
-  { id: "c2_wait_inside", label: "Rester là, à attendre.", next: "c2_cigarette_outside" },
+  choices: () => [
+  { id: "c2_wait_inside", label: "Attendre encore un peu avant de sortir.", next: "c2_cigarette_outside" },
   { id: "c2_wait_smoke", label: "Sortir fumer sur la murette.", next: "c2_cigarette_outside" },
   { id: "c2_wait_family", label: "Ressasser la journée avec eux.", next: "c2_cigarette_outside" },
   ...(getStressReactionChoice() ? [getStressReactionChoice()] : [])
@@ -698,16 +770,23 @@ c2_waiting: {
 },
 
 c2_cigarette_outside: {
-  image: "./assets/image_fond/c2_cigarette_outside.png",
+  id: "c2_cigarette_outside",
+  label: "Sur la murette",
+  kind: "choice",
+  visualFx: "streetCold",
+  image: "./assets/image_fond/scene2/c2_cigarette_outside.png",
   transition: "fade",
   text:
-    "J'étais assis sur la murette, " +
-    "une cigarette entre les doigts.\n\n" +
-    "Nana détestait que je fume. " +
-    "Elle le sentait toujours sur mes vêtements. " +
-    "Alors j'avais réduit.\n\n" +
-    "Je regardais les gens passer dans la rue. " +
-    "Je rêvassais. " +
+    (scene) =>
+    getChoiceEcho(scene, "c2_waiting", {
+      c2_wait_inside: "J'étais resté encore un moment à l'intérieur, puis j'avais fini par sortir.\n\n",
+      c2_wait_smoke: "J'étais sorti prendre cette pause que je repoussais depuis le début de l'alerte.\n\n",
+      c2_wait_family: "À force de repenser à cette matinée avec eux, je n'arrivais plus à suivre les conversations. J'avais fini par sortir.\n\n",
+      c2_wait_crack: "L'attente devenait trop lourde. J'étais sorti pour reprendre un peu d'air.\n\n"
+    }) +
+    "J'étais assis sur la murette, une cigarette entre les doigts.\n\n" +
+    "Nana détestait que je fume. Elle le sentait toujours sur mes vêtements. Alors j'avais réduit.\n\n" +
+    "Je regardais les gens passer dans la rue. Je rêvassais. " +
     "Comme si la journée pouvait encore reprendre un cours normal.",
   choiceReveal: { initialDelayMs: 450, staggerMs: 260 },
   choices: [
@@ -718,21 +797,29 @@ c2_cigarette_outside: {
 },
 
 c2_planes: {
-  image: "./assets/image_fond/c2_planes.png",
+  id: "c2_planes",
+  label: "Les avions",
+  kind: "choice",
+  visualFx: "streetCold",
+  image: "./assets/image_fond/scene2/c2_planes.png",
   transition: "fade",
   text:
     "Un bruit a résonné au-dessus de ma tête.\n\n" +
     "J'ai levé les yeux. " +
     "J'ai entrevu deux avions.",
   choices: [
-    { id: "c2_planes_look", label: "Lever les yeux.", next: "c2_explosions" },
+    { id: "c2_planes_look", label: "Suivre les avions du regard.", next: "c2_explosions" },
     { id: "c2_planes_freeze", label: "Rester figé une seconde.", next: "c2_explosions" },
-    { id: "c2_planes_late", label: "Comprendre trop tard.", next: "c2_explosions" }
+    { id: "c2_planes_late", label: "Chercher à comprendre ce qui se passait.", next: "c2_explosions" }
   ]
 },
 
 c2_explosions: {
-  image: "./assets/image_fond/c2_explosions.png",
+  id: "c2_explosions",
+  label: "Les explosions",
+  kind: "choice",
+  visualFx: "streetCold",
+  image: "./assets/image_fond/scene2/c2_explosions.png",
   transition: "fade",
   text:
     "Immédiatement, " +
@@ -753,7 +840,11 @@ c2_explosions: {
 },
 
 c2_radio_order: {
-  image: "./assets/image_fond/c2_radio_order.png",
+  id: "c2_radio_order",
+  label: "L’ordre de départ",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_radio_order.png",
   transition: "fade",
   text:
     "Je suis rentré dans la salle radio.\n\n" +
@@ -772,7 +863,11 @@ c2_radio_order: {
 },
 
 c2_assignment: {
-  image: "./assets/image_fond/c2_assignment.png",
+  id: "c2_assignment",
+  label: "Vers le fourgon",
+  kind: "choice",
+  visualFx: "firehouseCold",
+  image: "./assets/image_fond/scene2/c2_assignment.png",
   transition: "fade",
   text:
     "Je savais ce que cela voulait dire.\n\n" +
@@ -785,9 +880,13 @@ c2_assignment: {
 },
 
 c2_end_placeholder: {
-  image: "./assets/image_fond/black_soft.png",
+  id: "c2_end_placeholder",
+  label: "Fin du chapitre 2",
+  kind: "end",
+  visualFx: "rubble",
+  image: "./assets/image_fond/scene1/black_soft.png",
   transition: "fade",
-  text: "Fin provisoire du chapitre 2.",
+  text: "Fin du chapitre 2.",
   choices: []
 }
 }
@@ -884,117 +983,24 @@ const CHOICE_EFFECTS = {
   c2_order_depart: { dutyAnchor: 1 }
 };
 
-function applyChoiceEffects(choiceId) {
-  const effects = CHOICE_EFFECTS[choiceId];
-  if (!effects) return;
 
+function applyChoiceEffects(scene, choice) {
+  const effects = CHOICE_EFFECTS[choice.id] || {};
   for (const [key, delta] of Object.entries(effects)) {
-    if (typeof playerState[key] !== "number") continue;
-    playerState[key] += delta;
-  }
-}
-async function runNode(nodeId) {
-  const node = NODES[nodeId];
-  if (!node) {
-    console.error("Node introuvable :", nodeId);
-    return;
-  }
-
-  if (node.await) await node.await();
-
-  if (node.transition === "fade" && node.image) {
-    await transitionToImage(node.image, 900);
-  } else if (node.image && scene1Image) {
-    scene1Image.style.backgroundImage = `url("${node.image}")`;
-  }
-
-  showPanelOnly(node.title ?? "");
-  await typeWriter(node.text ?? "", 45);
-  await wait(250);
-
-  const filteredChoices = (node.choices ?? []).filter(c => {
-    if (typeof c.condition === "function") {
-      return c.condition(playerState);
-    }
-    return true;
-  });
-
-  const uiChoices = filteredChoices.map(c => ({ id: c.id, label: c.label }));
-
-  const opts = node.choiceReveal
-    ? {
-        initialDelayMs: node.choiceReveal.initialDelayMs ?? 0,
-        staggerMs: node.choiceReveal.staggerMs ?? 0
-      }
-    : {};
-
-  showChoices(node.title ? "" : "Que dois-je faire ?", uiChoices, opts);
-
-  setChoiceMap(
-    new Map(filteredChoices.map(c => [c.id, c.next]))
-  );
-}
-
-async function handleChoice(choiceId) {
-  hideChoices();
-  await goToBranch(choiceId);
-}
-async function goToBranch(choiceId) {
-  const next = getChoiceMap().get(choiceId);
-  if (!next) {
-    console.warn("Aucune suite définie pour:", choiceId);
-    return;
-  }
-
-  applyChoiceEffects(choiceId);
-  savePlayerState();
-  await runNode(next);
-}
-
-/* =========================
-   START SCENE 2
-   ========================= */
-export async function startScene2() {
-  clearTimers();
-
-  showScreen("scene1");
-
-  // Reset visuels
-  if (chapterCard) chapterCard.classList.remove("is-visible");
-  if (scene1Image) {
-  scene1Image.classList.add("is-visible");
-}
-
-  // Reset UI texte/choix
-  if (textContainer) textContainer.textContent = "";
-  clearChoices();
-  hideChoices();
-
-  // Carton
-  if (chapterCard) {
-    chapterCard.textContent = "Chapitre 2 - Le déclin";
-    await wait(50);
-    chapterCard.classList.add("is-visible");
-  }
-
-  // Audio
-  if (ambience) {
-    try {
-      ambience.currentTime = 0;
-      ambience.volume = 1.0;
-      await ambience.play();
-    } catch (e) {
-      console.warn("Audio scene2 bloqué :", e);
+    if (typeof playerState[key] === "number") {
+      playerState[key] = Math.max(-5, Math.min(5, playerState[key] + delta));
     }
   }
-
-  // Fade out du carton
-    setTimeout(() => {
-    if (chapterCard) chapterCard.classList.remove("is-visible");
-  }, 3000);
-
-  setTimeout(() => {
-    runNode("c2_intro");
-  }, 4000);
 }
 
+for (const node of Object.values(NODES)) {
+  const choices = typeof node.choices === "function" ? node.choices() : node.choices;
+  node.mapNext = [...new Set((choices || []).map(choice => choice.next))];
+}
+export const chapter2Map = {
+  id: "chapter2", title: "Chapitre 2 - Le déclin",
+  start: "c2_intro", end: "c2_end_placeholder", nodes: NODES
+};
+export function startScene2(state = playerState, deps = {}) {
+  return startChapter(chapter2Map, state, "scene2", deps, { onChoice: applyChoiceEffects });
+}

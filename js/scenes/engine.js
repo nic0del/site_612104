@@ -9,6 +9,8 @@ export function createSceneEngine({
   onChoice
 }) {
   let timers = [];
+  let cancellationId = 0;
+  const pendingTasks = new Set();
   let currentChoiceMap = new Map();
 
   let typingRunId = 0;
@@ -25,17 +27,26 @@ export function createSceneEngine({
   }
 
   function clearTimers() {
+    cancellationId++;
     typingRunId++;
     isTyping = false;
     activeTextTarget = null;
 
     for (const t of timers) clearTimeout(t);
     timers = [];
+    for (const cancel of [...pendingTasks]) cancel();
+    pendingTasks.clear();
+    currentChoiceMap = new Map();
   }
 
   function wait(ms) {
     return new Promise((resolve) => {
-      registerTimeout(resolve, ms);
+      const cancel = () => resolve(false);
+      pendingTasks.add(cancel);
+      registerTimeout(() => {
+        pendingTasks.delete(cancel);
+        resolve(true);
+      }, ms);
     });
   }
 
@@ -99,14 +110,17 @@ export function createSceneEngine({
 
       let i = 0;
       let resolved = false;
+      const cancel = () => done(false);
+      pendingTasks.add(cancel);
 
-      function done() {
+      function done(completed = true) {
         if (resolved) return;
         resolved = true;
+        pendingTasks.delete(cancel);
         if (myRunId === typingRunId) {
           activeTextTarget = null;
         }
-        resolve();
+        resolve(completed);
       }
 
       function finishInstantly() {
@@ -148,6 +162,7 @@ export function createSceneEngine({
     const speed = opts.speed ?? 40;
     const clearFirst = opts.clearFirst ?? true;
     const className = opts.className ?? "sceneTextLine";
+    const run = cancellationId;
 
     if (clearFirst) {
       clearText();
@@ -155,25 +170,27 @@ export function createSceneEngine({
 
     for (let idx = 0; idx < lines.length; idx++) {
       const line = lines[idx];
-      await typeWriter(line ?? "", {
+      if (run !== cancellationId) return false;
+      const completed = await typeWriter(line ?? "", {
         speed,
         append: true,
         className
       });
+      if (completed === false || run !== cancellationId) return false;
 
       if (idx < lines.length - 1) {
-        await wait(lineGapMs);
+        if (!await wait(lineGapMs)) return false;
       }
     }
+    return true;
   }
 
   async function typeText(text, opts = {}) {
     if (Array.isArray(text)) {
-      await typeLines(text, opts);
-      return;
+      return typeLines(text, opts);
     }
 
-    await typeWriter(text ?? "", {
+    return typeWriter(text ?? "", {
       speed: opts.speed ?? 40,
       append: false,
       className: opts.className ?? "sceneTextLine"
@@ -193,7 +210,9 @@ export function createSceneEngine({
   }
 
   async function transitionToImage(newImageUrl, ms = 900) {
+    const run = cancellationId;
     await fadeToBlack(ms);
+    if (run !== cancellationId) return false;
 
     if (sceneImage && newImageUrl) {
       sceneImage.style.backgroundImage = `url("${newImageUrl}")`;
@@ -201,6 +220,7 @@ export function createSceneEngine({
     }
 
     await fadeFromBlack(ms);
+    return run === cancellationId;
   }
 
   function clearChoices() {
