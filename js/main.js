@@ -9,7 +9,7 @@ import {
   pauseOnHidden
 } from "./audio.js";
 import { startScene1 } from "./scenes/scene1.js";
-import { startScene2 } from "./scenes/scene2.js";
+import { startScene2 } from "./scenes/scene2.js?v=c2-paragraphes-1";
 const gameState = {};
 import {
   startGuestSession,
