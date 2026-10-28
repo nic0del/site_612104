@@ -1587,3 +1587,94 @@ input:focus{
   font-size: 0.95rem;
   color: #f1c47b;
 }
+
+/* =========================
+   BONUS SCREEN
+========================= */
+
+.bonus-screen {
+  overflow: hidden;
+  padding: 32px 20px;
+  box-sizing: border-box;
+}
+
+.bonusPanel {
+  width: min(900px, 92vw);
+  height: min(86vh, 780px);
+  margin: auto;
+  padding: 28px;
+  box-sizing: border-box;
+
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+
+  border-radius: 22px;
+  background: rgba(8, 10, 16, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.bonusHeader {
+  flex: 0 0 auto;
+}
+
+.bonusHeader h1 {
+  margin: 0 0 8px;
+}
+
+.bonusHeader p {
+  margin: 0;
+  opacity: 0.78;
+}
+
+.bonusCategory {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bonusCategory h2 {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.bonusNovelList {
+  flex: 1 1 auto;
+  min-height: 0;
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  padding-right: 8px;
+
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bonusNovelButton {
+  width: 100%;
+  text-align: left;
+}
+
+.bonusNovelButton.locked {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.bonusNovelButton.unavailable {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.bonusActions {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: flex-end;
+}

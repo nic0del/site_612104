@@ -9,7 +9,8 @@ const PLAYER_STATE_NUMERIC_KEYS = [
   "politicalLucidity",
   "tendernessToAngela",
   "traumaLoad",
-  "stress"
+  "stress",
+  "memoryStability"
 ];
 
 function clamp(value, min, max) {
@@ -1602,7 +1603,7 @@ ch1_end_election:{
   kind: "end",
   x: 2980,
   y: 300,
-  image: "./assets/image_fond/black_soft.png",
+  image: "./assets/image_fond/scene1/black_soft.png",
   transition: "fade",
 
   text: [
@@ -1668,6 +1669,32 @@ function getNextNodeId(scene, node) {
   if (typeof node.getNext === "function") return node.getNext(scene);
   if (node.next) return node.next;
   return null;
+}
+
+function canShowChoice(choice, scene) {
+  if (!choice) return false;
+
+  if (typeof choice.condition !== "function") {
+    return true;
+  }
+
+  try {
+    return !!choice.condition({
+      playerState,
+      scene
+    });
+  } catch (error) {
+    console.warn("Erreur dans la condition du choix :", choice.id, error);
+    return false;
+  }
+}
+
+function getVisibleChoices(node, scene) {
+  if (!Array.isArray(node?.choices)) {
+    return [];
+  }
+
+  return node.choices.filter((choice) => canShowChoice(choice, scene));
 }
 
 function normalizeRendererDeps(deps = {}) {
@@ -1739,7 +1766,32 @@ async function renderNode(node, scene, deps, goToNode) {
   });
 
   if (node.kind === "choice" && Array.isArray(node.choices)) {
-    const uiChoices = node.choices.map((choice) => ({
+  const visibleChoices = getVisibleChoices(node, scene);
+
+  if (visibleChoices.length === 0) {
+    console.warn(`[scene1] Aucun choix visible pour le nœud : ${node.id}`);
+
+    showChoices("", [
+      {
+        id: "next_scene1",
+        label: "Continuer"
+      }
+    ]);
+
+    const nextNodeId = getNextNodeId(scene, node);
+
+    setChoiceMap(
+      new Map([
+        [
+          "next_scene1",
+          nextNodeId
+            ? { type: "next", nextNodeId }
+            : { type: "end" }
+        ]
+      ])
+    );
+  } else {
+    const uiChoices = visibleChoices.map((choice) => ({
       id: choice.id,
       label: choice.label
     }));
@@ -1751,13 +1803,14 @@ async function renderNode(node, scene, deps, goToNode) {
 
     setChoiceMap(
       new Map(
-        node.choices.map((choice) => [
+        visibleChoices.map((choice) => [
           choice.id,
           { type: "choice", choice }
         ])
       )
     );
-  } else if (node.kind === "end") {
+  }
+} else if (node.kind === "end") {
     showChoices("", [
   { id: "end_scene1", label: "Afficher la carte du chapitre" }
 ]);
@@ -1839,7 +1892,7 @@ async function playScene1Intro() {
   }
 
   if (scene1Image) {
-    scene1Image.style.backgroundImage = 'url("./assets/image_fond/black_soft.png")';
+    scene1Image.style.backgroundImage = 'url("./assets/image_fond/scene1/black_soft.png")';
     scene1Image.classList.add("is-visible");
   }
 

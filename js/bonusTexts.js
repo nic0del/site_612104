@@ -1,3 +1,91 @@
+export const novelBonusChapters = [
+  {
+    id: "chapter1",
+    number: 1,
+    title: "Chapitre 1 — L’Origine"
+  },
+  {
+    id: "chapter2",
+    number: 2,
+    title: "Chapitre 2 — Le déclin"
+  },
+  {
+    id: "chapter3",
+    number: 3,
+    title: "Chapitre 3"
+  },
+  {
+    id: "chapter4",
+    number: 4,
+    title: "Chapitre 4"
+  },
+  {
+    id: "chapter5",
+    number: 5,
+    title: "Chapitre 5"
+  },
+  {
+    id: "chapter6",
+    number: 6,
+    title: "Chapitre 6"
+  },
+  {
+    id: "chapter7",
+    number: 7,
+    title: "Chapitre 7"
+  },
+  {
+    id: "chapter8",
+    number: 8,
+    title: "Chapitre 8"
+  },
+  {
+    id: "chapter9",
+    number: 9,
+    title: "Chapitre 9"
+  },
+  {
+    id: "chapter10",
+    number: 10,
+    title: "Chapitre 10"
+  },
+  {
+    id: "chapter11",
+    number: 11,
+    title: "Chapitre 11"
+  },
+  {
+    id: "chapter12",
+    number: 12,
+    title: "Chapitre 12"
+  },
+  {
+    id: "chapter13",
+    number: 13,
+    title: "Chapitre 13"
+  },
+  {
+    id: "chapter14",
+    number: 14,
+    title: "Chapitre 14"
+  },
+  {
+    id: "chapter15",
+    number: 15,
+    title: "Chapitre 15"
+  },
+  {
+    id: "chapter16",
+    number: 16,
+    title: "Chapitre 16"
+  },
+  {
+    id: "chapter17",
+    number: 17,
+    title: "Chapitre 17"
+  }
+];
+
 export const novelBonusTexts = {
   chapter1: {
     title: "Chapitre 1 — L’Origine",

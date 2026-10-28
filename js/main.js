@@ -9,11 +9,18 @@ import {
   pauseOnHidden
 } from "./audio.js";
 import { startScene1 } from "./scenes/scene1.js";
+import { startScene2 } from "./scenes/scene2.js";
 const gameState = {};
-import { startGuestSession, startAccountSession, playerState } from "./state.js";
+import {
+  startGuestSession,
+  startAccountSession,
+  playerState,
+  unlockNovelChapter,
+  isNovelChapterUnlocked
+} from "./state.js";
 import { supabase } from "./supabase.js";
 import { renderChapterMap } from "./chapterMap.js";
-import { novelBonusTexts } from "./bonusTexts.js";
+import { novelBonusTexts, novelBonusChapters } from "./bonusTexts.js";
 
 /* -----------------------------
    DOM
@@ -59,8 +66,11 @@ chapter1MapTheme: document.getElementById("chapter1MapTheme"),
   btnStart: document.getElementById("btnStart"),
   btnNewGame: document.getElementById("btnNewGame"),
   btnSupport: document.getElementById("btnSupport"),
-  btnBonusChapter1: document.getElementById("btnBonusChapter1"),
-  btnReadNovelChapter1: document.getElementById("btnReadNovelChapter1"),
+  btnOpenBonus: document.getElementById("btnOpenBonus"),
+  btnChapterEndBonus: document.getElementById("btnChapterEndBonus"),
+  bonusNovelList: document.getElementById("bonusNovelList"),
+  btnBonusBack: document.getElementById("btnBonusBack"),
+  btnChapterEndNext: document.getElementById("btnChapterEndNext"),
   btnChapterEndMenu: document.getElementById("btnChapterEndMenu"),
   btnChapterEndSupport: document.getElementById("btnChapterEndSupport"),
   btnCloseNovel: document.getElementById("btnCloseNovel"),
@@ -422,6 +432,7 @@ function stopAudio(audio) {
 }
 
 function stopScene1Audios() {
+  stopAudio(DOM.music);
   stopAudio(DOM.scene1Impact);
   stopAudio(DOM.scene1RubbleAmbience);
   stopAudio(DOM.scene1FamilyTheme);
@@ -546,36 +557,64 @@ if (node.visualFx === "ligueRed") {
 return "rubble";
 }
 
-function ensureBonusState() {
-  if (!playerState.unlockedBonus) {
-    playerState.unlockedBonus = {};
-  }
+let lastScreenBeforeBonus = "menu";
 
-  if (typeof playerState.unlockedBonus.chapter1Novel === "undefined") {
-    playerState.unlockedBonus.chapter1Novel = false;
+function hasNovelChapterText(chapterId) {
+  return !!novelBonusTexts[chapterId]?.body;
+}
+
+function renderBonusScreen() {
+  if (!DOM.bonusNovelList) return;
+
+  DOM.bonusNovelList.innerHTML = "";
+
+  for (const chapter of novelBonusChapters) {
+    const unlocked = isNovelChapterUnlocked(chapter.id);
+    const hasText = hasNovelChapterText(chapter.id);
+
+    const button = document.createElement("button");
+    button.className = "bonusNovelButton";
+
+    if (!unlocked) {
+      button.textContent = `🔒 ${chapter.title}`;
+      button.classList.add("locked");
+      button.disabled = true;
+    } else if (!hasText) {
+      button.textContent = `✓ ${chapter.title} — texte à venir`;
+      button.classList.add("unavailable");
+      button.disabled = true;
+    } else {
+      button.textContent = `📖 ${chapter.title}`;
+      button.addEventListener("click", () => {
+        openNovelChapter(chapter.id, "bonus");
+      });
+    }
+
+    DOM.bonusNovelList.appendChild(button);
   }
+}
+
+function openBonusPage(returnScreen = "menu") {
+  lastScreenBeforeBonus = returnScreen;
+  renderBonusScreen();
+  showScreen("bonus");
+}
+
+function closeBonusPage() {
+  showScreen(lastScreenBeforeBonus);
+}
+
+function ensureBonusState() {
+  renderBonusScreen();
 }
 
 function unlockBonusChapter1() {
-  ensureBonusState();
-  playerState.unlockedBonus.chapter1Novel = true;
-  updateBonusUI();
+  unlockNovelChapter("chapter1");
+  renderBonusScreen();
 }
 
 function updateBonusUI() {
-  ensureBonusState();
-
-  if (!DOM.btnBonusChapter1) return;
-
-  if (playerState.unlockedBonus.chapter1Novel) {
-    DOM.btnBonusChapter1.textContent = "📖 Lire le chapitre 1 du roman";
-    DOM.btnBonusChapter1.classList.remove("locked");
-    DOM.btnBonusChapter1.disabled = false;
-  } else {
-    DOM.btnBonusChapter1.textContent = "🔒 Chapitre 1 du roman";
-    DOM.btnBonusChapter1.classList.add("locked");
-    DOM.btnBonusChapter1.disabled = true;
-  }
+  renderBonusScreen();
 }
 
 /* -----------------------------
@@ -657,6 +696,120 @@ async function launchScene1() {
     }
   });
 }
+
+async function launchScene2Test() {
+  if (!isUnlocked()) {
+    await tryUnlock();
+  }
+
+  currentSceneMusicZone = "none";
+  stopScene1Audios();
+  stopAudio(DOM.music);
+
+  await updateUserLabels();
+  await fadeToBlack(900);
+
+  disableMenuBackground();
+  showScreen("scene1");
+
+  stopAudio(DOM.music);
+
+  if (DOM.music) {
+    DOM.music.pause();
+    DOM.music.currentTime = 0;
+  }
+
+  await switchScene1MusicZone("rubble");
+  await fadeFromBlack(650);
+
+  startScene2(gameState, {
+    mount: document.getElementById("screen-scene1"),
+
+    beforeRender: async ({ node }) => {
+      const zone = getScene1MusicZoneFromNode(node);
+      await switchScene1MusicZone(zone);
+    },
+
+    onChapterEnd: async ({ chapterId, scene, map }) => {
+      await switchScene1MusicZone("map");
+
+      renderChapterMap({
+        map,
+        scene,
+        onContinue: async () => {
+          currentSceneMusicZone = "none";
+          stopScene1Audios();
+          enableMenuBackground();
+          await goToMenu();
+        }
+      });
+    },
+
+    onStateChange: (progress) => {
+      console.log("Progression chapitre 2 :", progress);
+    }
+  });
+}
+
+async function launchScene2({ reset = false } = {}) {
+  if (!isUnlocked()) {
+    await tryUnlock();
+  }
+
+  if (reset) {
+    delete gameState.scene2;
+  }
+
+  currentSceneMusicZone = "none";
+  stopScene1Audios();
+  stopAudio(DOM.music);
+
+  await updateUserLabels();
+  await fadeToBlack(900);
+
+  disableMenuBackground();
+  showScreen("scene1");
+
+  stopAudio(DOM.music);
+
+  await switchScene1MusicZone("rubble");
+  await fadeFromBlack(650);
+
+  startScene2(gameState, {
+    mount: document.getElementById("screen-scene1"),
+
+    beforeRender: async ({ node }) => {
+      const zone = getScene1MusicZoneFromNode(node);
+      await switchScene1MusicZone(zone);
+    },
+
+    onChapterEnd: async ({ chapterId, scene, map }) => {
+      await switchScene1MusicZone("map");
+
+      renderChapterMap({
+        map,
+        scene,
+        onContinue: async () => {
+          currentSceneMusicZone = "none";
+          stopScene1Audios();
+          enableMenuBackground();
+          await goToMenu();
+        }
+      });
+    },
+
+    onStateChange: (progress) => {
+      console.log("Progression chapitre 2 :", progress);
+    }
+  });
+}
+
+window.launchScene2Test = launchScene2Test;
+
+window.resetScene2Test = () => {
+  delete gameState.scene2;
+  console.log("Progression chapitre 2 réinitialisée pour le test.");
+};
 
 async function leaveGameToGate() {
   stopScene1Audios();
@@ -761,6 +914,7 @@ function resetGameStateForNewGame() {
   playerState.tendernessToAngela = 0;
   playerState.traumaLoad = 0;
   playerState.stress = 0;
+  playerState.memoryStability = 0;
 
   ensureBonusState();
 }
@@ -976,19 +1130,21 @@ document.addEventListener("fullscreenchange", () => {
   updateGameFullscreenButton();
 });
 
-if (DOM.btnBonusChapter1) {
-  DOM.btnBonusChapter1.addEventListener("click", () => {
-    ensureBonusState();
-
-    if (!playerState.unlockedBonus.chapter1Novel) return;
-
-    openNovelChapter("chapter1", "menu");
+if (DOM.btnOpenBonus) {
+  DOM.btnOpenBonus.addEventListener("click", () => {
+    openBonusPage("menu");
   });
 }
 
-if (DOM.btnReadNovelChapter1) {
-  DOM.btnReadNovelChapter1.addEventListener("click", () => {
-    openNovelChapter("chapter1", "chapter-end");
+if (DOM.btnChapterEndBonus) {
+  DOM.btnChapterEndBonus.addEventListener("click", () => {
+    openBonusPage("chapter-end");
+  });
+}
+
+if (DOM.btnBonusBack) {
+  DOM.btnBonusBack.addEventListener("click", () => {
+    closeBonusPage();
   });
 }
 
@@ -1004,6 +1160,12 @@ if (DOM.btnChapterEndMenu) {
 
     enableMenuBackground();
     await goToMenu();
+  });
+}
+
+if (DOM.btnChapterEndNext) {
+  DOM.btnChapterEndNext.addEventListener("click", async () => {
+    await launchScene2({ reset: true });
   });
 }
 

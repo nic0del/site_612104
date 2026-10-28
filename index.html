@@ -112,15 +112,8 @@
   <button id="btnOptions">⚙ Options</button>
   <button id="btnFullscreen">⛶ Plein écran</button>
   <button id="btnSupport">♡ Soutenir le projet</button>
+  <button id="btnOpenBonus">✦ Bonus</button>
   <button id="btnQuit">⏻ Quitter</button>
-</div>
-
-<div class="bonusPanel" id="bonusPanel">
-  <h3>Bonus</h3>
-
-  <button id="btnBonusChapter1" class="bonusBtn locked">
-    🔒 Chapitre 1 du roman
-  </button>
 </div>
 
       <div class="tiny">
@@ -192,9 +185,28 @@
     </p>
 
     <div class="chapterEndActions">
-      <button id="btnReadNovelChapter1">📖 Lire le chapitre 1 du roman</button>
-      <button id="btnChapterEndMenu">Retour au menu</button>
-      <button id="btnChapterEndSupport">♡ Soutenir le projet</button>
+     <button id="btnChapterEndNext">Continuer vers le chapitre 2</button>
+     <button id="btnChapterEndBonus">Voir les bonus débloqués</button>
+     <button id="btnChapterEndMenu">Retour au menu</button>
+     <button id="btnChapterEndSupport">♡ Soutenir le projet</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen bonus-screen" id="screen-bonus">
+  <div class="bonusPanel">
+    <div class="bonusHeader">
+      <h1>Bonus</h1>
+      <p>Les contenus se débloquent au fil de ta progression.</p>
+    </div>
+
+    <div class="bonusCategory">
+      <h2>Chapitres du roman</h2>
+      <div id="bonusNovelList" class="bonusNovelList"></div>
+    </div>
+
+    <div class="bonusActions">
+      <button id="btnBonusBack">Retour</button>
     </div>
   </div>
 </section>
