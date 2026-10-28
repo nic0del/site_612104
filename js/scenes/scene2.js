@@ -139,7 +139,7 @@ c2_governor_resigns: {
   label: "Démission du gouverneur",
   kind: "choice",
   visualFx: "tvBlue",
-  image: "./assets/image_fond/scene1/ch1_t2_governor.png",
+  image: "./assets/image_fond/scene2/c2_governor_resigns.png",
   transition: "fade",
   text:
     "Comme on pouvait s'y attendre, dès le lendemain et devant cette écrasante victoire de la Ligue, " +
@@ -165,7 +165,7 @@ c2_vornic_elected: {
   label: "Vornic",
   kind: "choice",
   visualFx: "ligueRed",
-  image: "./assets/image_fond/scene1/ligue_rise.png",
+  image: "./assets/image_fond/scene2/c2_vornic_tv.png",
   transition: "fade",
   text:
     "Dans la foulée, la chambre des députés élut un nouveau gouverneur.\n\n" +
@@ -188,7 +188,7 @@ c2_full_powers: {
   label: "Les pleins pouvoirs",
   kind: "choice",
   visualFx: "ligueRed",
-  image: "./assets/image_fond/scene1/ligue_election.png",
+  image: "./assets/image_fond/scene2/c2_full_powers.png",
   transition: "fade",
   text:
     "Le soir même, devant 'l'urgence de la situation', comme il disait, " +
@@ -212,7 +212,7 @@ c2_stay_or_leave: {
   label: "Rester ou partir",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/home_evening.png",
+  image: "./assets/image_fond/scene2/c2_home_reflection.png",
   transition: "fade",
   text:
     "Angela et moi savions déjà que les changements n'iraient pas dans le sens que nous espérions. " +
@@ -247,7 +247,7 @@ c2_daily_life: {
   label: "La vie continue",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/ch1_h1_home.png",
+  image: "./assets/image_fond/scene2/c2_daily_life.png",
   transition: "fade",
   text:
   () => "Les premiers temps, " +
@@ -274,7 +274,7 @@ c2_night_shift_reflection: {
   label: "Les gardes de nuit",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_night_shift.png",
   transition: "fade",
   text:
   () => "Je travaillais souvent de nuit à cette époque. " +
@@ -301,7 +301,7 @@ c2_adoption_memory_intro: {
   label: "Le souvenir de l’adoption",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/home_evening.png",
+  image: "./assets/image_fond/scene2/c2_adoption_intro.png",
   transition: "fade",
   text:
     "Pour nous, " +
@@ -326,7 +326,7 @@ c2_courtroom: {
   label: "Au tribunal",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/home_evening.png",
+  image: "./assets/image_fond/scene2/c2_courtroom.png",
   transition: "fade",
   text:
     "Nous étions tous les cinq dans le bureau du juge aux affaires familiales.\n\n" +
@@ -352,7 +352,7 @@ c2_angela_becomes_mother: {
   label: "Angela devient leur mère",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/kitchen_back_kiss.png",
+  image: "./assets/image_fond/scene2/c2_angela_mother.png",
   transition: "fade",
   text:
     "Après cette étreinte avec les enfants, " +
@@ -380,7 +380,7 @@ c2_autumn_walk: {
   label: "Promenade d’automne",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/home_evening.png",
+  image: "./assets/image_fond/scene2/c2_autumn_walk.png",
   transition: "fade",
   text:
     "C'était un mercredi, je crois. " +
@@ -407,7 +407,7 @@ c2_restaurant_plan: {
   label: "Fêter la famille",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/home_evening.png",
+  image: "./assets/image_fond/scene2/c2_restaurant_plan.png",
   transition: "fade",
   text:
     (scene) =>
@@ -429,7 +429,7 @@ c2_gunshot_memory_intro: {
   label: "La peur d’Angela",
   kind: "choice",
   visualFx: "rubble",
-  image: "./assets/image_fond/scene1/memory_fragments_2.png",
+  image: "./assets/image_fond/scene2/c2_gunshot_intro.png",
   transition: "fade",
   text:
     "Bien avant cette matinée au tribunal, Nana avait déjà eu peur de me perdre en intervention.\n\n" +
@@ -452,7 +452,7 @@ c2_drunk_man_scene: {
   label: "L’intervention",
   kind: "choice",
   visualFx: "rubble",
-  image: "./assets/image_fond/scene1/memory_fragments_2.png",
+  image: "./assets/image_fond/scene2/c2_drunk_man_scene.png",
   transition: "fade",
   text:
     "Il faisait nuit. " +
@@ -481,7 +481,7 @@ c2_shot: {
   label: "Le coup de feu",
   kind: "choice",
   visualFx: "rubble",
-  image: "./assets/image_fond/scene1/fire_silhouette.png",
+  image: "./assets/image_fond/scene2/c2_shot.png",
   transition: "fade",
   text:
     "L'homme a bondi sur le côté du canapé. " +
@@ -506,7 +506,7 @@ c2_hospital_angela: {
   label: "À l’hôpital",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/ch1_f2_talk.png",
+  image: "./assets/image_fond/scene2/c2_hospital_angela.png",
   transition: "fade",
   text:
     "Quand je me suis réveillé, " +
@@ -531,7 +531,7 @@ c2_siren: {
   label: "La sirène",
   kind: "choice",
   visualFx: "streetCold",
-  image: "./assets/image_fond/scene1/street_tensions.png",
+  image: "./assets/image_fond/scene2/c2_siren.png",
   transition: "fade",
   text:
   () => "Le souvenir de l'hôpital s'efface. Je retrouve cette matinée d'automne : " +
@@ -556,7 +556,7 @@ c2_goodbye_family: {
   label: "Les adieux",
   kind: "choice",
   visualFx: "homeWarm",
-  image: "./assets/image_fond/scene1/kitchen_back_kiss.png",
+  image: "./assets/image_fond/scene2/c2_goodbye_family.png",
   transition: "fade",
   text:
   () => "J'ai embrassé les enfants sur le front. " +
@@ -585,7 +585,7 @@ c2_run_to_barracks: {
   label: "Vers la caserne",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_run_to_barracks.png",
   transition: "fade",
   text:
     "Je tournais les talons et je rejoignais en courant ma caserne à quelques centaines de mètres à peine.\n\n" +
@@ -610,7 +610,7 @@ c2_barracks_arrival: {
   label: "C’est la guerre",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_barracks_arrival.png",
   transition: "fade",
   text:
     () => "J'arrivai rapidement au centre. " +
@@ -645,7 +645,7 @@ c2_war_declared: {
   label: "La dépêche",
   kind: "choice",
   visualFx: "tvBlue",
-  image: "./assets/image_fond/scene1/ch1_t1_tv_alert.png",
+  image: "./assets/image_fond/scene2/c2_war_declared.png",
   transition: "fade",
   text:
     "Tous les services étaient mobilisés en urgence. " +
@@ -671,7 +671,7 @@ c2_mobilisation: {
   label: "La mobilisation",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_mobilisation.png",
   transition: "fade",
   text:
     "Sur les hommes de la caserne, " +
@@ -693,7 +693,7 @@ c2_gear_check: {
   label: "Le matériel et la photo",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_gear_check.png",
   transition: "fade",
   text:
     "Les premières heures, " +
@@ -721,7 +721,7 @@ c2_failed_call_home: {
   label: "Un appel impossible",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/ch1_f1_kitchen.png",
+  image: "./assets/image_fond/scene2/c2_failed_call_home.png",
   transition: "fade",
   text:
     "Depuis le début de l'alerte, " +
@@ -746,7 +746,7 @@ c2_waiting: {
   label: "L’attente",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_waiting.png",
   transition: "fade",
   text:
   () => "Je regardais les minutes défiler au ralenti. " +
@@ -774,7 +774,7 @@ c2_cigarette_outside: {
   label: "Sur la murette",
   kind: "choice",
   visualFx: "streetCold",
-  image: "./assets/image_fond/scene1/street_tensions.png",
+  image: "./assets/image_fond/scene2/c2_cigarette_outside.png",
   transition: "fade",
   text:
     (scene) =>
@@ -801,7 +801,7 @@ c2_planes: {
   label: "Les avions",
   kind: "choice",
   visualFx: "streetCold",
-  image: "./assets/image_fond/scene1/ch1_t3_escalation.png",
+  image: "./assets/image_fond/scene2/c2_planes.png",
   transition: "fade",
   text:
     "Un bruit a résonné au-dessus de ma tête.\n\n" +
@@ -819,7 +819,7 @@ c2_explosions: {
   label: "Les explosions",
   kind: "choice",
   visualFx: "streetCold",
-  image: "./assets/image_fond/scene1/street_tensions.png",
+  image: "./assets/image_fond/scene2/c2_explosions.png",
   transition: "fade",
   text:
     "Immédiatement, " +
@@ -844,7 +844,7 @@ c2_radio_order: {
   label: "L’ordre de départ",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_radio_order.png",
   transition: "fade",
   text:
     "Je suis rentré dans la salle radio.\n\n" +
@@ -867,7 +867,7 @@ c2_assignment: {
   label: "Vers le fourgon",
   kind: "choice",
   visualFx: "firehouseCold",
-  image: "./assets/image_fond/scene1/locker_room.png",
+  image: "./assets/image_fond/scene2/c2_assignment.png",
   transition: "fade",
   text:
     "Je savais ce que cela voulait dire.\n\n" +
