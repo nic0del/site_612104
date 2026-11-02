@@ -8,10 +8,13 @@ import {
   getTargetVolume,
   pauseOnHidden
 } from "./audio.js";
-import { startScene1 } from "./scenes/scene1.js";
-import { startScene2 } from "./scenes/scene2.js?v=c2-paragraphes-1";
-const gameState = {};
+import { startScene1, stopScene1 } from "./scenes/scene1.js";
+import { startScene2, stopScene2 } from "./scenes/scene2.js";
+const gameState = playerState;
 import {
+  savePlayerState,
+  resetPlayerState,
+  replacePlayerState,
   startGuestSession,
   startAccountSession,
   playerState,
@@ -329,30 +332,65 @@ async function updateUserLabels() {
 /* -----------------------------
    Save / Load
 ----------------------------- */
-async function saveGame(sceneId, currentPlayerState) {
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+let activeUserId = null;
+let saveQueue = Promise.resolve();
+let launchId = 0;
 
-  if (!user) throw new Error("Pas connecté");
+function saveGame(sceneId, currentPlayerState) {
+  // Capture avant toute attente : les scènes suivantes ne modifient pas cet envoi.
+  const userId = activeUserId;
+  const snapshot = JSON.parse(JSON.stringify(currentPlayerState));
+  const operation = saveQueue.catch(() => {}).then(async () => {
+    if (!userId) throw new Error("Pas connecté");
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.id !== userId) throw new Error("La session a changé");
+    const { error } = await supabase.from("saves").upsert({
+      user_id: userId,
+      scene_text: sceneId,
+      player_state: snapshot,
+      updated_at: snapshot.savedAt || new Date().toISOString()
+    }, { onConflict: "user_id" });
+    if (error) throw error;
+  });
+  saveQueue = operation;
+  return operation;
+}
 
-  const { error } = await supabase
-    .from("saves")
-    .upsert(
-      {
-        user_id: user.id,
-        scene_text: sceneId,
-        player_state: currentPlayerState,
-        updated_at: new Date().toISOString()
-      },
-      {
-        onConflict: "user_id"
-      }
-    );
+function checkpoint() {
+  playerState.savedAt = new Date().toISOString();
+  const localSaved = savePlayerState();
+  if (pendingMode === "account" && activeUserId) {
+    const node = playerState[playerState.activeChapter]?.currentNodeId || "new_game";
+    saveGame(node, playerState).catch(error => {
+      console.warn("Synchronisation impossible :", error);
+      setAudioHint(localSaved
+        ? "Progression conservée sur cet appareil ; synchronisation en attente."
+        : "Sauvegarde impossible. Ne ferme pas le jeu pour le moment.");
+    });
+  } else if (!localSaved) {
+    setAudioHint("Sauvegarde impossible. Ne ferme pas le jeu pour le moment.");
+  }
+}
 
-  if (error) throw error;
+async function prepareAccount() {
+  await saveQueue.catch(() => {});
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Reconnecte-toi pour reprendre ta partie.");
+  // Une erreur de lecture bloque la reprise au lieu d'écraser la partie distante.
+  const remote = await loadGame();
+  startAccountSession(user.id);
+  activeUserId = user.id;
+  if (remote?.player_state &&
+      (!playerState.savedAt || Date.parse(remote.updated_at) >= Date.parse(playerState.savedAt))) {
+    replacePlayerState(remote.player_state);
+    savePlayerState();
+  }
+}
 
-  console.log("SAVE:", sceneId, currentPlayerState);
+function stopScenes() {
+  launchId++;
+  stopScene1();
+  stopScene2();
 }
 
 window.saveGame = saveGame;
@@ -622,21 +660,21 @@ function updateBonusUI() {
 ----------------------------- */
 
 async function launchScene1() {
+  stopScenes();
+  const run = launchId;
+  playerState.activeChapter = "scene1";
+  checkpoint();
   if (!isUnlocked()) {
     await tryUnlock();
-  }
-
-  if (pendingMode === "guest") {
-    startGuestSession();
-  } else {
-    startAccountSession();
   }
 
   currentSceneMusicZone = "none";
   stopScene1Audios();
 
   await updateUserLabels();
+  if (run !== launchId) return;
   await fadeToBlack(900);
+  if (run !== launchId) return;
 
   disableMenuBackground();
   showScreen("scene1");
@@ -648,18 +686,11 @@ async function launchScene1() {
 
   await playOneShot(DOM.scene1Impact, 1);
   await switchScene1MusicZone("rubble");
+  if (run !== launchId) return;
 
   await fadeFromBlack(650);
 
-  if (pendingMode === "account") {
-    const save = await loadGame();
-
-    if (save) {
-      Object.assign(playerState, save.player_state || {});
-      Object.assign(gameState, save.player_state || {});
-    }
-  }
-
+  if (run !== launchId) return;
   startScene1(gameState, {
     mount: document.getElementById("screen-scene1"),
 
@@ -669,6 +700,7 @@ async function launchScene1() {
     },
 
     onChapterEnd: async ({ chapterId, scene, map }) => {
+      checkpoint();
       await switchScene1MusicZone("map");
 
       renderChapterMap({
@@ -676,14 +708,7 @@ async function launchScene1() {
   scene,
   onContinue: async () => {
     unlockBonusChapter1();
-
-    if (pendingMode === "account") {
-      try {
-        await saveGame("chapter1_end", playerState);
-      } catch (error) {
-        console.warn("Sauvegarde du bonus impossible :", error);
-      }
-    }
+    checkpoint();
 
     currentSceneMusicZone = "none";
     showScreen("chapter-end");
@@ -692,72 +717,22 @@ async function launchScene1() {
     },
 
     onStateChange: (progress) => {
-      console.log("Progression chapitre 1 :", progress);
+      checkpoint();
     }
   });
 }
 
 async function launchScene2Test() {
-  if (!isUnlocked()) {
-    await tryUnlock();
-  }
-
-  currentSceneMusicZone = "none";
-  stopScene1Audios();
-  stopAudio(DOM.music);
-
-  await updateUserLabels();
-  await fadeToBlack(900);
-
-  disableMenuBackground();
-  showScreen("scene1");
-
-  stopAudio(DOM.music);
-
-  if (DOM.music) {
-    DOM.music.pause();
-    DOM.music.currentTime = 0;
-  }
-
-  await switchScene1MusicZone("rubble");
-  await fadeFromBlack(650);
-
-  startScene2(gameState, {
-    mount: document.getElementById("screen-scene1"),
-
-    beforeRender: async ({ node }) => {
-      const zone = getScene1MusicZoneFromNode(node);
-      await switchScene1MusicZone(zone);
-    },
-
-    onChapterEnd: async ({ chapterId, scene, map }) => {
-      await switchScene1MusicZone("map");
-
-      renderChapterMap({
-        map,
-        scene,
-        onContinue: async () => {
-          currentSceneMusicZone = "none";
-          stopScene1Audios();
-          enableMenuBackground();
-          await goToMenu();
-        }
-      });
-    },
-
-    onStateChange: (progress) => {
-      console.log("Progression chapitre 2 :", progress);
-    }
-  });
+  return launchScene2();
 }
 
-async function launchScene2({ reset = false } = {}) {
+async function launchScene2() {
+  stopScenes();
+  const run = launchId;
+  playerState.activeChapter = "scene2";
+  checkpoint();
   if (!isUnlocked()) {
     await tryUnlock();
-  }
-
-  if (reset) {
-    delete gameState.scene2;
   }
 
   currentSceneMusicZone = "none";
@@ -765,7 +740,9 @@ async function launchScene2({ reset = false } = {}) {
   stopAudio(DOM.music);
 
   await updateUserLabels();
+  if (run !== launchId) return;
   await fadeToBlack(900);
+  if (run !== launchId) return;
 
   disableMenuBackground();
   showScreen("scene1");
@@ -773,8 +750,10 @@ async function launchScene2({ reset = false } = {}) {
   stopAudio(DOM.music);
 
   await switchScene1MusicZone("rubble");
+  if (run !== launchId) return;
   await fadeFromBlack(650);
 
+  if (run !== launchId) return;
   startScene2(gameState, {
     mount: document.getElementById("screen-scene1"),
 
@@ -784,6 +763,7 @@ async function launchScene2({ reset = false } = {}) {
     },
 
     onChapterEnd: async ({ chapterId, scene, map }) => {
+      checkpoint();
       await switchScene1MusicZone("map");
 
       renderChapterMap({
@@ -799,7 +779,7 @@ async function launchScene2({ reset = false } = {}) {
     },
 
     onStateChange: (progress) => {
-      console.log("Progression chapitre 2 :", progress);
+      checkpoint();
     }
   });
 }
@@ -812,6 +792,8 @@ window.resetScene2Test = () => {
 };
 
 async function leaveGameToGate() {
+  checkpoint();
+  stopScenes();
   stopScene1Audios();
   currentSceneMusicZone = "none";
 
@@ -896,26 +878,12 @@ async function closeNovelReader() {
 }
 
 function resetGameStateForNewGame() {
-  gameState.scene1 = {
-    currentNodeId: null,
-    visitedNodes: [],
-    visitedSet: {},
-    flags: {},
-    ended: false
-  };
-
-  playerState.proudReason = null;
-  playerState.beliefHelped = null;
-
-  playerState.selfControl = 0;
-  playerState.familyAnchor = 0;
-  playerState.dutyAnchor = 0;
-  playerState.politicalLucidity = 0;
-  playerState.tendernessToAngela = 0;
-  playerState.traumaLoad = 0;
-  playerState.stress = 0;
-  playerState.memoryStability = 0;
-
+  stopScenes();
+  const unlockedBonus = playerState.unlockedBonus;
+  resetPlayerState();
+  playerState.unlockedBonus = unlockedBonus;
+  playerState.activeChapter = "scene1";
+  checkpoint();
   ensureBonusState();
 }
 
@@ -942,6 +910,8 @@ if (DOM.btnGuest) {
   DOM.btnGuest.addEventListener("click", async () => {
     await tryUnlock();
     pendingMode = "guest";
+    activeUserId = null;
+    startGuestSession();
     await transitionTo("menu");
     await goToMenu();
   });
@@ -1044,6 +1014,7 @@ if (!hasProfile) {
   return;
 }
 
+await prepareAccount();
 setLoginMessage("Connexion réussie.");
 await goToMenu();
     } catch (error) {
@@ -1075,7 +1046,11 @@ if (DOM.btnForgotPassword) {
 
 if (DOM.btnStart) {
   DOM.btnStart.addEventListener("click", async () => {
-    await launchScene1();
+    if (playerState.activeChapter === "scene2" || playerState.scene2?.currentNodeId) {
+      await launchScene2();
+    } else {
+      await launchScene1();
+    }
   });
 }
 
@@ -1165,27 +1140,19 @@ if (DOM.btnChapterEndMenu) {
 
 if (DOM.btnChapterEndNext) {
   DOM.btnChapterEndNext.addEventListener("click", async () => {
-    await launchScene2({ reset: true });
+    await launchScene2();
   });
 }
 
 if (DOM.btnNewGame) {
   DOM.btnNewGame.addEventListener("click", async () => {
     const confirmed = window.confirm(
-      "Recommencer effacera ta progression actuelle du chapitre 1. Continuer ?"
+      "Recommencer effacera ta progression actuelle des chapitres 1 et 2. Continuer ?"
     );
 
     if (!confirmed) return;
 
     resetGameStateForNewGame();
-
-    if (pendingMode === "account") {
-      try {
-        await saveGame("new_game", playerState);
-      } catch (error) {
-        console.warn("Impossible d’écraser la sauvegarde :", error);
-      }
-    }
 
     await launchScene1();
   });
@@ -1245,6 +1212,10 @@ if (DOM.btnSupportFeedback) {
 /* -----------------------------
    Init
 ----------------------------- */
+window.addEventListener("online", () => {
+  if (activeUserId) checkpoint();
+});
+window.addEventListener("pagehide", () => savePlayerState());
 pauseOnHidden();
 disableMenuBackground();
 showScreen("gate");

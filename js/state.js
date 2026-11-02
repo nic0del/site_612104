@@ -36,7 +36,12 @@ function createDefaultPlayerState() {
 const STORAGE_KEY = "save_612104_playerState";
 const MODE_KEY = "save_612104_mode";
 
+let accountId = null;
 let saveMode = "guest"; // "guest" | "account"
+
+function storageKey() {
+  return accountId ? `${STORAGE_KEY}:${accountId}` : STORAGE_KEY;
+}
 
 function getStorage() {
   return saveMode === "account" ? localStorage : sessionStorage;
@@ -80,14 +85,8 @@ function normalizePlayerStateShape(state = {}) {
 
 function loadPlayerState() {
   try {
-    const rememberedMode = localStorage.getItem(MODE_KEY);
-
-    if (rememberedMode === "account" || rememberedMode === "guest") {
-      saveMode = rememberedMode;
-    }
-
     const storage = getStorage();
-    const raw = storage.getItem(STORAGE_KEY);
+    const raw = storage.getItem(storageKey());
 
     if (!raw) {
       return createDefaultPlayerState();
@@ -103,7 +102,7 @@ function loadPlayerState() {
 
 export const playerState = loadPlayerState();
 
-function replacePlayerState(nextState) {
+export function replacePlayerState(nextState) {
   for (const key of Object.keys(playerState)) {
     delete playerState[key];
   }
@@ -114,9 +113,11 @@ function replacePlayerState(nextState) {
 export function savePlayerState() {
   try {
     const storage = getStorage();
-    storage.setItem(STORAGE_KEY, JSON.stringify(playerState));
+    storage.setItem(storageKey(), JSON.stringify(playerState));
+    return true;
   } catch (error) {
     console.warn("Impossible de sauvegarder playerState :", error);
+    return false;
   }
 }
 
@@ -125,35 +126,19 @@ export function resetPlayerState() {
   savePlayerState();
 }
 
-// 🔥 MODE INVITÉ
+// Une session invitée survit aux rechargements du même onglet.
 export function startGuestSession() {
   saveMode = "guest";
-  localStorage.setItem(MODE_KEY, "guest");
-
-  sessionStorage.removeItem(STORAGE_KEY);
-  replacePlayerState(createDefaultPlayerState());
-  savePlayerState();
+  accountId = null;
+  replacePlayerState(loadPlayerState());
 }
 
-// 🔒 MODE CONNECTÉ
-export function startAccountSession() {
+// Ne jamais attribuer l'ancienne sauvegarde locale partagée à un autre compte.
+export function startAccountSession(userId) {
+  if (!userId) throw new Error("Compte manquant");
   saveMode = "account";
-  localStorage.setItem(MODE_KEY, "account");
-
-  const raw = localStorage.getItem(STORAGE_KEY);
-
-  if (raw) {
-    try {
-      replacePlayerState(JSON.parse(raw));
-    } catch (error) {
-      console.warn("Sauvegarde locale invalide, réinitialisation :", error);
-      replacePlayerState(createDefaultPlayerState());
-      savePlayerState();
-    }
-  } else {
-    replacePlayerState(createDefaultPlayerState());
-    savePlayerState();
-  }
+  accountId = userId;
+  replacePlayerState(loadPlayerState());
 }
 
 export function getSaveMode() {

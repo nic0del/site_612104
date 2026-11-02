@@ -288,7 +288,14 @@
 
   <!-- Main script -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script type="importmap">
+{"imports": {
+  "./js/state.js": "./js/state.js?v=checkpoints-1",
+  "./js/scenes/scene1.js": "./js/scenes/scene1.js?v=checkpoints-1",
+  "./js/scenes/scene2.js": "./js/scenes/scene2.js?v=checkpoints-1"
+}}
+</script>
 <script type="module" src="./js/supabase.js"></script>
-<script type="module" src="./js/main.js?v=c2-paragraphes-1"></script>
+<script type="module" src="./js/main.js?v=checkpoints-1"></script>
 </body>
 </html>

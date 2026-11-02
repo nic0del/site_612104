@@ -1403,6 +1403,13 @@ const choiceList = document.getElementById("choiceList");
 const textContainer = document.getElementById("text-container");
 const fade = document.getElementById("fade");
 
+let sceneRun = 0;
+export function stopScene2() {
+  sceneRun++;
+  engine.clearTimers();
+  engine.setChoiceMap(new Map());
+  engine.hideChoices();
+}
 let currentGoToNode = null;
 let currentScene = null;
 let currentChapterEndHandler = null;
@@ -1411,8 +1418,12 @@ function handleChoice(choiceId) {
   const payload = engine.getChoiceMap().get(choiceId);
 
   if (!payload) return;
+  engine.setChoiceMap(new Map());
+  engine.hideChoices();
 
   if (payload.type === "choice") {
+    currentScene.choices ||= {};
+    currentScene.choices[currentScene.currentNodeId] = payload.choice.id;
     applyEffects(currentScene, payload.choice.effects);
     currentGoToNode(payload.choice.next);
     return;
@@ -1540,6 +1551,7 @@ function applyScene2VisualFx(name) {
 }
 
 async function renderNode(node, scene, deps, goToNode) {
+  const run = sceneRun;
   currentGoToNode = goToNode;
   currentScene = scene;
   currentChapterEndHandler = deps.onChapterEnd;
@@ -1549,6 +1561,7 @@ async function renderNode(node, scene, deps, goToNode) {
   showPanelOnly("");
 
   await deps.beforeRender({ node, scene });
+  if (run !== sceneRun) return;
 
   if (node.transition === "fade" && node.image) {
     await engine.transitionToImage(node.image, 900);
@@ -1557,6 +1570,7 @@ async function renderNode(node, scene, deps, goToNode) {
     sceneImage.classList.add("is-visible");
   }
 
+  if (run !== sceneRun) return;
   applyScene2VisualFx(node.visualFx || "");
 
   await typeText(resolveText(node, scene), {
@@ -1565,6 +1579,7 @@ async function renderNode(node, scene, deps, goToNode) {
     clearFirst: true
   });
 
+  if (run !== sceneRun) return;
   if (node.kind === "choice" && Array.isArray(node.choices)) {
     const visibleChoices = getVisibleChoices(node, scene);
 
@@ -1736,6 +1751,8 @@ async function playScene2Intro() {
 }
 
 export async function startScene2(state = {}, deps = {}) {
+  stopScene2();
+  const run = sceneRun;
   const scene = ensureSceneState(state);
   const rendererDeps = normalizeRendererDeps(deps);
 
@@ -1754,16 +1771,18 @@ export async function startScene2(state = {}, deps = {}) {
   }
 
   async function goToNode(nodeId) {
+    if (run !== sceneRun) return;
     const node = getNode(nodeId);
 
     if (!node) {
       throw new Error(`[scene2] Node introuvable : ${nodeId}`);
     }
 
+    const firstVisit = !scene.visitedSet[nodeId];
     scene.currentNodeId = nodeId;
     visitNode(scene, nodeId);
 
-    if (node.onEnter) {
+    if (firstVisit && node.onEnter) {
       applyEffects(scene, node.onEnter);
     }
 
