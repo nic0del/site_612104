@@ -175,3 +175,35 @@ test('stopping chapter 2 while beforeRender is pending prevents stale choices',a
   await a.settle();scene.stopScene2();release();await started;
   assert.equal(a.calls.engines[1].map.size,0);
 });
+
+test('chapter 2 completion unlocks and saves the bonus before the map, then shows its own ending',async()=>{
+  const a=await setup();await a.click('btnGuest');await a.window.launchScene2Test();
+  const launch=a.calls.launches.at(-1);
+  launch.state.scene2={currentNodeId:'ch2_end',ended:false};
+  const finish=launch.deps.onChapterEnd({scene:launch.state.scene2,map:{id:'chapter2'}});
+  assert.equal(a.state.isNovelChapterUnlocked('chapter2'),true);
+  const saved=JSON.parse(a.sessionStorage.getItem('save_612104_playerState'));
+  assert.equal(saved.scene2.ended,true);
+  assert.equal(saved.unlockedBonus.novelChapters.chapter2,true);
+  await finish;a.calls.map.onContinue();
+  assert.equal(a.el('chapterEndTitle').textContent,'Chapitre 2 terminé');
+  assert.equal(a.el('btnChapterEndNext').hidden,true);
+  assert.match(a.el('chapterEndUnlock').textContent,/Texte à venir/);
+  const launches=a.calls.launches.length;await a.click('btnChapterEndNext');
+  assert.equal(a.calls.launches.length,launches);
+  await a.click('btnChapterEndBonus');assert.equal(a.calls.screen,'bonus');
+  await a.click('btnBonusBack');assert.equal(a.calls.screen,'chapter-end');
+  await a.click('btnChapterEndMenu');assert.equal(a.calls.screen,'menu');
+  a.state.startGuestSession();assert.equal(a.state.isNovelChapterUnlocked('chapter2'),true);
+});
+
+test('chapter 1 still unlocks its own bonus and offers chapter 2',async()=>{
+  const a=await setup();await a.click('btnGuest');await a.click('btnStart');
+  const launch=a.calls.launches.at(-1);launch.state.scene1={currentNodeId:'end'};
+  await launch.deps.onChapterEnd({scene:launch.state.scene1,map:{id:'chapter1'}});
+  a.calls.map.onContinue();assert.equal(a.el('chapterEndTitle').textContent,'Chapitre 1 terminé');
+  assert.equal(a.el('btnChapterEndNext').hidden,false);
+  assert.equal(a.state.isNovelChapterUnlocked('chapter1'),true);
+  assert.equal(a.state.isNovelChapterUnlocked('chapter2'),false);
+  await a.click('btnChapterEndNext');assert.equal(a.calls.launches.at(-1).n,2);
+});

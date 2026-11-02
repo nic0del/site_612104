@@ -646,9 +646,33 @@ function ensureBonusState() {
   renderBonusScreen();
 }
 
-function unlockBonusChapter1() {
-  unlockNovelChapter("chapter1");
-  renderBonusScreen();
+let completedChapter = 1;
+
+function showChapterEnd(number) {
+  completedChapter = number;
+  document.getElementById("chapterEndTitle").textContent = `Chapitre ${number} terminé`;
+  document.getElementById("chapterEndSummary").textContent = number === 1
+    ? "Tu as parcouru les premiers fragments de la mémoire de Mika. Le chemin n’est pas complet, mais il laisse déjà une trace."
+    : "Tu as parcouru le chapitre 2 — Le déclin. La suite de l’histoire sera disponible prochainement.";
+  const available = hasNovelChapterText(`chapter${number}`);
+  document.getElementById("chapterEndUnlock").textContent =
+    `Bonus débloqué : Chapitre ${number} du roman.` + (available ? "" : " Texte à venir.");
+  DOM.btnChapterEndNext.hidden = number !== 1;
+  DOM.btnChapterEndNext.disabled = number !== 1;
+  currentSceneMusicZone = "none";
+  showScreen("chapter-end");
+}
+
+async function finishChapter(number, { scene, map }) {
+  // Débloquer et enregistrer avant les animations de carte et de musique.
+  scene.ended = true;
+  unlockNovelChapter(`chapter${number}`);
+  checkpoint();
+  updateBonusUI();
+  const run = launchId;
+  await switchScene1MusicZone("map");
+  if (run !== launchId) return;
+  renderChapterMap({ map, scene, onContinue: () => showChapterEnd(number) });
 }
 
 function updateBonusUI() {
@@ -699,22 +723,7 @@ async function launchScene1() {
       await switchScene1MusicZone(zone);
     },
 
-    onChapterEnd: async ({ chapterId, scene, map }) => {
-      checkpoint();
-      await switchScene1MusicZone("map");
-
-      renderChapterMap({
-  map,
-  scene,
-  onContinue: async () => {
-    unlockBonusChapter1();
-    checkpoint();
-
-    currentSceneMusicZone = "none";
-    showScreen("chapter-end");
-  }
-});
-    },
+    onChapterEnd: details => finishChapter(1, details),
 
     onStateChange: (progress) => {
       checkpoint();
@@ -762,21 +771,7 @@ async function launchScene2() {
       await switchScene1MusicZone(zone);
     },
 
-    onChapterEnd: async ({ chapterId, scene, map }) => {
-      checkpoint();
-      await switchScene1MusicZone("map");
-
-      renderChapterMap({
-        map,
-        scene,
-        onContinue: async () => {
-          currentSceneMusicZone = "none";
-          stopScene1Audios();
-          enableMenuBackground();
-          await goToMenu();
-        }
-      });
-    },
+    onChapterEnd: details => finishChapter(2, details),
 
     onStateChange: (progress) => {
       checkpoint();
@@ -1140,7 +1135,7 @@ if (DOM.btnChapterEndMenu) {
 
 if (DOM.btnChapterEndNext) {
   DOM.btnChapterEndNext.addEventListener("click", async () => {
-    await launchScene2();
+    if (completedChapter === 1) await launchScene2();
   });
 }
 
