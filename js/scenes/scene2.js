@@ -966,6 +966,7 @@ const NODES = {
     kind: "scene",
     image: image("c2_war_declared"),
     visualFx: "tvBlue",
+    audioZone: "firehouse",
 
     text: () => {
       const lines = [

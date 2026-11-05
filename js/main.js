@@ -571,6 +571,7 @@ async function switchScene1MusicZone(zone) {
 
 function getScene1MusicZoneFromNode(node) {
   if (!node) return "rubble";
+  if (node.audioZone) return node.audioZone;
 
   if (node.visualFx === "homeWarm") {
     return "family";

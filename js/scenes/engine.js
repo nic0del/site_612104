@@ -209,6 +209,7 @@ export function createSceneEngine({
   }
 
   function showPanelOnly(title = "") {
+    if (choicePanel) choicePanel.scrollTop = 0;
     if (choiceTitle) choiceTitle.textContent = title;
     clearText();
     clearChoices();

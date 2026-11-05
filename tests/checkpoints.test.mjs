@@ -15,7 +15,7 @@ async function setup({ localStorage = storage(), sessionStorage = storage(), act
     if (!elements.has(id)) elements.set(id, {
       style: {}, classList: {add(){},remove(){}}, handlers: {}, value: '',
       addEventListener(name, fn) { this.handlers[name] = fn; },
-      appendChild(){}, pause(){}, play: async () => {}, volume: .3,
+      appendChild(){}, paused:true, pause(){this.paused=true;}, async play(){this.paused=false;}, volume: .3,
     });
     return elements.get(id);
   }
@@ -65,7 +65,9 @@ async function setup({ localStorage = storage(), sessionStorage = storage(), act
   }
   async function load(id) {
     if (modules.has(id)) return modules.get(id);
-    const mod = new vm.SourceTextModule(await read(id), {context,identifier:id});
+    const source = await read(id);
+    if (modules.has(id)) return modules.get(id);
+    const mod = new vm.SourceTextModule(source, {context,identifier:id});
     modules.set(id,mod);
     await mod.link((specifier, parent) => load(new URL(specifier,'file:///' + parent.identifier).pathname.slice(1)));
     return mod;
@@ -206,4 +208,47 @@ test('chapter 1 still unlocks its own bonus and offers chapter 2',async()=>{
   assert.equal(a.state.isNovelChapterUnlocked('chapter1'),true);
   assert.equal(a.state.isNovelChapterUnlocked('chapter2'),false);
   await a.click('btnChapterEndNext');assert.equal(a.calls.launches.at(-1).n,2);
+});
+
+test('all chapter 2 nodes and choices render and lead to valid destinations',async()=>{
+  const a=await setup({actualScenes:true});await a.click('btnGuest');
+  const scene=a.modules.get('js/scenes/scene2.js').namespace;
+  const map=scene.getChapter2MapData();const engine=a.calls.engines[1];
+  const destinations=new Map();let choices=0;
+  for(const [id,node] of Object.entries(map.nodes)) {
+    destinations.set(id,new Set());
+    for(const family of [-5,5]) {
+      a.state.replacePlayerState({familyAnchor:family,tendernessToAngela:family,stress:family,dutyAnchor:family,memoryStability:family,politicalLucidity:family,selfControl:family,scene2:{currentNodeId:id}});
+      await scene.startScene2(a.state.playerState);
+      assert.ok(engine.map.size,`${id}: no available action`);
+      for(const [choiceId,payload] of [...engine.map]) {
+        a.state.replacePlayerState({familyAnchor:family,tendernessToAngela:family,stress:family,dutyAnchor:family,memoryStability:family,politicalLucidity:family,selfControl:family,scene2:{currentNodeId:id}});
+        await scene.startScene2(a.state.playerState);
+        engine.click(choiceId);await a.settle();choices++;
+        if(payload.type==='end') { assert.equal(a.state.playerState.scene2.ended,true);continue; }
+        const next=a.state.playerState.scene2.currentNodeId;
+        assert.ok(map.nodes[next],`${id}: invalid next ${next}`);
+        assert.notEqual(next,id,`${id}: self loop`);
+        destinations.get(id).add(next);
+      }
+    }
+  }
+  const reached=new Set();const queue=[map.start];
+  while(queue.length){const id=queue.pop();if(reached.has(id))continue;reached.add(id);queue.push(...destinations.get(id));}
+  assert.equal(reached.size,Object.keys(map.nodes).length,'unreachable scenes: '+Object.keys(map.nodes).filter(id=>!reached.has(id)).join(','));
+  for(const start of reached){
+    const visited=new Set();const pending=[start];let ends=false;
+    while(pending.length){const id=pending.pop();if(visited.has(id))continue;visited.add(id);if(id===map.end){ends=true;break;}pending.push(...destinations.get(id));}
+    assert.ok(ends,`${start} cannot reach chapter end`);
+  }
+  console.log(`Chapter 2 audit: ${reached.size} nodes, ${choices} action checks, both family branches`);
+});
+
+test('fax uses firehouse audio and leaves no TV track playing',async()=>{
+  const a=await setup({actualScenes:true});await a.click('btnGuest');
+  a.state.playerState.scene2={currentNodeId:'ch2_c3_war_fax'};
+  await a.window.launchScene2Test();await a.settle();
+  assert.equal(a.el('scene1FirehouseAmbience').paused,false);
+  assert.equal(a.el('scene1TvAmbience').paused,true);
+  assert.equal(a.el('scene1RubbleAmbience').paused,true);
 });
