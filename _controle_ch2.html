@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="fr">
+<head><meta name="robots" content="noindex">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>612104</title>
+  <link rel="stylesheet" href="./css/main.css?v=chapter2-audit-1">
+  <link rel="icon" type="image/svg+xml" href="./assets/favicon.svg">
+</head>
+
+<body>
+  <!-- Background (for menu), hidden on gate -->
+  <div class="bg" id="bg"></div>
+  <div class="vignette" id="vignette"></div>
+
+  <!-- Music (menu) -->
+  <audio id="music" loop preload="auto">
+    <source src="./assets/audio/zec53-emotional-melancholic-inspirational-sincere-piano-and-strings-321684.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Fade overlay -->
+  <div id="fade" class="fade"></div>
+
+  <!-- SCREEN 1: Gate -->
+  <section class="screen gate active" id="screen-gate">
+    <div class="gateBox">
+      <h1 class="title">612104</h1>
+
+      <p class="disclaimer">
+        Avertissement : cette œuvre contient des thèmes pouvant heurter des personnes sensibles
+        (enfermement, détresse, catastrophes, charge émotionnelle).
+        Si tu ne te sens pas prêt·e, reviens plus tard.
+      </p>
+
+      <div class="btnRow">
+       <button id="btnGuest">▶ Jouer en tant qu’invité</button>
+       <button id="btnLogin">🔒 Se connecter</button>
+       <button id="btnGoSignup">🆕 Créer un profil</button>
+      </div>
+
+      <div class="metaLine" id="audioHint">
+        Le son démarrera après ton premier clic.
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 2: Login -->
+  <section class="screen login" id="screen-login">
+    <div class="loginBox">
+      <h2>Connexion</h2>
+
+      <div class="field">
+        <label for="email">Email</label>
+        <input id="email" type="email" autocomplete="email" placeholder="ex: nico@exemple.fr" />
+      </div>
+
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" />
+      </div>
+
+      <div class="inlineRow">
+       <button id="btnSubmitLogin">Se connecter</button>
+       <button id="btnForgotPassword">Mot de passe oublié</button>
+       <button id="btnBackToGate">Retour</button>
+     </div>
+
+      <div class="metaLine" id="loginMsg"></div>
+    </div>
+  </section>
+
+<!-- SCREEN 3: Signup -->
+<section class="screen signup" id="screen-signup">
+  <div class="loginBox">
+    <h2>Créer un profil</h2>
+
+    <div class="field">
+      <label for="signupUsername">Pseudo</label>
+      <input id="signupUsername" type="text" placeholder="Ton pseudo" />
+    </div>
+
+    <div class="field">
+      <label for="signupEmail">Email</label>
+      <input id="signupEmail" type="email" placeholder="ex: nico@exemple.fr" />
+    </div>
+
+    <div class="field">
+      <label for="signupPassword">Mot de passe</label>
+      <input id="signupPassword" type="password" placeholder="••••••••" />
+    </div>
+
+    <div class="inlineRow">
+      <button id="btnSubmitSignup">Créer le profil</button>
+      <button id="btnBackToLogin">Retour</button>
+    </div>
+
+    <div class="metaLine" id="signupMsg"></div>
+  </div>
+</section>
+
+  <!-- SCREEN 3: Menu -->
+  <section class="screen menu" id="screen-menu">
+    <div class="menuPanel">
+      <p id="welcomeUser" class="menuSub"></p>
+      <p class="menuSub">
+        Une expérience narrative interactive. Fais des choix. Porte-en le poids.
+      </p>
+
+      <div class="menuBtns">
+  <button id="btnStart">▶ Continuer</button>
+  <button id="btnNewGame">↻ Nouvelle partie</button>
+  <button id="btnOptions">⚙ Options</button>
+  <button id="btnFullscreen">⛶ Plein écran</button>
+  <button id="btnSupport">♡ Soutenir le projet</button>
+  <button id="btnOpenBonus">✦ Bonus</button>
+  <button id="btnQuit">⏻ Quitter</button>
+</div>
+
+      <div class="tiny">
+        <button id="btnSound" class="tinyBtn">Son : …</button>
+        <span>v0.1</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCREEN 4: Scene 1 -->
+  <section class="screen scene1" id="screen-scene1">
+  <div class="chapterCard" id="chapterCard">Chapitre 1 - L'origine</div>
+  <div class="sceneImage" id="scene1Image"></div>
+
+  <div class="sceneTopBar" id="sceneTopBar">
+  <div class="scenePlayer" id="scenePlayerName">Bienvenue</div>
+
+  <div class="sceneTopActions">
+    <button id="btnGameFullscreen" class="sceneTopBtn">⛶ Plein écran</button>
+    <button id="btnGameHome" class="sceneTopBtn">⌂ Accueil</button>
+  </div>
+</div>
+
+  <div class="choicePanel" id="choicePanel">
+    <div id="text-container"></div>
+    <div class="choiceTitle" id="choiceTitle">Que fais-tu ?</div>
+    <div class="choiceList" id="choiceList"></div>
+  </div>
+</section>
+
+<section class="screen chapter-map" id="screen-chapter-map">
+  <div class="chapterMapWrap">
+    <div class="chapterMapHeader">
+      <h2 id="chapterMapTitle">Fin du chapitre</h2>
+      <p id="chapterMapSubtitle">Chemin parcouru</p>
+    </div>
+
+    <div class="chapterMapViewport" id="chapterMapViewport">
+  <div class="chapterMapStage" id="chapterMapStage">
+    <svg id="chapterMapSvg" class="chapterMapSvg"></svg>
+    <div id="chapterMapNodes" class="chapterMapNodes"></div>
+  </div>
+</div>
+
+    <div class="chapterMapFooter">
+  <div class="chapterMapNav">
+    <button id="btnMapLeft" class="mapNavBtn">← Reculer</button>
+    <button id="btnMapRight" class="mapNavBtn">Avancer →</button>
+  </div>
+
+  <button id="btnMapContinue">Continuer</button>
+</div>
+
+  </div>
+</section>
+
+<!-- SCREEN: Chapter end -->
+<section class="screen chapter-end" id="screen-chapter-end">
+  <div class="chapterEndBox">
+    <h2 id="chapterEndTitle">Chapitre 1 terminé</h2>
+
+    <p id="chapterEndSummary">
+      Tu as parcouru les premiers fragments de la mémoire de Mika.
+      Le chemin n’est pas complet, mais il laisse déjà une trace.
+    </p>
+
+    <p class="chapterEndUnlock" id="chapterEndUnlock">
+      Bonus débloqué : Chapitre 1 du roman.
+    </p>
+
+    <div class="chapterEndActions">
+     <button id="btnChapterEndNext">Continuer vers le chapitre 2</button>
+     <button id="btnChapterEndBonus">Voir les bonus débloqués</button>
+     <button id="btnChapterEndMenu">Retour au menu</button>
+     <button id="btnChapterEndSupport">♡ Soutenir le projet</button>
+    </div>
+  </div>
+</section>
+
+<section class="screen bonus-screen" id="screen-bonus">
+  <div class="bonusPanel">
+    <div class="bonusHeader">
+      <h1>Bonus</h1>
+      <p>Les contenus se débloquent au fil de ta progression.</p>
+    </div>
+
+    <div class="bonusCategory">
+      <h2>Chapitres du roman</h2>
+      <div id="bonusNovelList" class="bonusNovelList"></div>
+    </div>
+
+    <div class="bonusActions">
+      <button id="btnBonusBack">Retour</button>
+    </div>
+  </div>
+</section>
+
+<!-- SCREEN: Novel reader -->
+<section class="screen novel-reader" id="screen-novel-reader">
+  <div class="novelReaderBox">
+    <div class="novelReaderHeader">
+      <h2 id="novelReaderTitle">Chapitre 1 — L’Origine</h2>
+      <button id="btnCloseNovel">Retour</button>
+    </div>
+
+    <div class="novelReaderText" id="novelReaderText"></div>
+  </div>
+</section>
+
+<!-- SCREEN: Support project -->
+<section class="screen support-screen" id="screen-support">
+  <div class="supportBox">
+    <h2>Soutenir 612104</h2>
+
+    <p>
+      Le projet est gratuit, sans publicité et sans financement pour le moment.
+    </p>
+
+    <p>
+      Si l’expérience t’a touché, le meilleur soutien est simple :
+      partager le jeu, en parler autour de toi, ou faire un retour après y avoir joué.
+    </p>
+
+    <div class="supportActions">
+      <button id="btnCopyGameLink">🔗 Copier le lien du jeu</button>
+      <button id="btnSupportFeedback">✉ Faire un retour</button>
+      <button id="btnSupportBack">Retour</button>
+    </div>
+
+    <p class="supportNote" id="supportCopyMsg"></p>
+  </div>
+</section>
+
+<!-- Scene 1 - intro impact / explosion -->
+<audio id="scene1Impact" preload="auto">
+  <source src="./assets/audio/scene1/impact_intro.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - rubble ambience -->
+<audio id="scene1RubbleAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/rubble_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - family branch theme -->
+<audio id="scene1FamilyTheme" loop preload="auto">
+  <source src="./assets/audio/scene1/dioneves-forgive-me-melancholic-piano-amp-strings-piece-256918.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - firehouse memory ambience -->
+<audio id="scene1FirehouseAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/firehouse_memory_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - TV / political ambience -->
+<audio id="scene1TvAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/tv_political_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Scene 1 - political unrest ambience -->
+<audio id="scene1PoliticalAmbience" loop preload="auto">
+  <source src="./assets/audio/scene1/political_unrest_ambience.mp3" type="audio/mpeg">
+</audio>
+
+<!-- Chapter 1 map theme -->
+<audio id="chapter1MapTheme" loop preload="auto">
+  <source src="./assets/audio/chapter_map/danydory-whispers-in-the-void-dark-ambient-music-425048.mp3" type="audio/mpeg">
+</audio>
+
+<audio id="novelReaderTheme" loop preload="auto">
+  <source src="./assets/audio/bonus/danydory-ambient-atmospheric-background-music_echoes-of-the-future-484633.mp3" type="audio/mpeg">
+</audio>
+
+  <!-- Main script -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script type="importmap">
+{"imports": {
+  "./js/state.js": "./js/state.js?v=checkpoints-1",
+  "./js/scenes/scene1.js": "./js/scenes/scene1.js?v=checkpoints-1",
+  "./js/scenes/scene2.js": "./js/scenes/scene2.js?v=chapter2-audit-1",
+  "./js/scenes/engine.js": "./js/scenes/engine.js?v=chapter2-audit-1"
+}}
+</script>
+<script type="module" src="./js/supabase.js"></script>
+<script type="module" src="./js/main.js?v=chapter2-audit-1"></script>
+<script type="module">
+import {playerState,startGuestSession,savePlayerState} from './js/state.js';
+import {chapter2Map} from './js/scenes/scene2.js';
+const bar=document.createElement('div');bar.style='position:fixed;top:0;left:30%;z-index:20000;background:#fff;color:#111;font:12px sans-serif;padding:3px;display:flex;gap:4px;max-width:65vw';
+bar.innerHTML='<button id="qaStart" style="all:revert">Tester chapitre 2</button><button id="qaReveal" style="all:revert">Afficher le passage</button><select id="qaNode"></select><span id="qaInfo"></span>';
+document.body.append(bar);
+const selector=bar.querySelector('select');for(const [id,node] of Object.entries(chapter2Map.nodes)){const op=document.createElement('option');op.value=id;op.textContent=node.label;selector.append(op);}
+bar.querySelector('#qaStart').onclick=()=>{startGuestSession();window.launchScene2Test();};
+selector.onchange=()=>{playerState.scene2={currentNodeId:selector.value};savePlayerState();window.launchScene2Test();};
+let revealing=null;
+bar.querySelector('#qaReveal').onclick=()=>{clearInterval(revealing);revealing=setInterval(()=>{if(document.querySelector('#choiceList button')){clearInterval(revealing);return;}document.getElementById('text-container').click();},70);};
+let last='';const diag=document.createElement('details');diag.style='position:fixed;bottom:0;right:0;z-index:20001;max-height:40vh;overflow:auto;background:white;color:black;font:11px monospace';diag.innerHTML='<summary>Diagnostic</summary><pre></pre>';document.body.append(diag);const history=[];
+setInterval(()=>{
+ const node=playerState.scene2?.currentNodeId;
+ bar.querySelector('#qaInfo').textContent=node||'';
+ if(node && document.querySelector('#choiceList button')){
+  const panel=document.getElementById('choicePanel'),r=panel.getBoundingClientRect();
+  const report={node,screen:document.querySelector('.screen.active')?.id,text:document.getElementById('text-container').innerText,choices:[...document.querySelectorAll('#choiceList button')].map(x=>x.innerText),image:document.getElementById('scene1Image').style.backgroundImage,audio:[...document.querySelectorAll('audio')].filter(x=>!x.paused).map(x=>({id:x.id,muted:x.muted,ready:x.readyState,error:x.error?.code})),panel:{top:r.top,bottom:r.bottom,height:r.height,scroll:panel.scrollHeight,client:panel.clientHeight},viewport:{width:innerWidth,height:innerHeight},bonus:playerState.unlockedBonus};
+  const data=JSON.stringify(report);if(data!==last){last=data;history.push(report);diag.querySelector('pre').textContent=JSON.stringify({current:report,visited:[...new Set(history.map(x=>x.node))]},null,2);}
+ }
+},500);
+window.addEventListener('error',e=>{diag.open=true;diag.querySelector('pre').textContent+='ERROR: '+e.message;});
+</script></body>
+</html>
